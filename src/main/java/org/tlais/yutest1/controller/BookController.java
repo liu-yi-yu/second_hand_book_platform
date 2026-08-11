@@ -45,19 +45,20 @@ public class BookController {
 
     @GetMapping()
     @Operation(summary = "获取分页书籍列表")
-    public Result getBooksPage(@RequestBody BookSearchDTO bookSearchDTO) {
+    public Result getBooksPage( BookSearchDTO bookSearchDTO) {
         return Result.success(bookService.getPage(bookSearchDTO));
     }
 
     @GetMapping("/search")
-    public Result searchBook(@RequestBody BookSearchDTO bookSearchDTO) {
+    public Result searchBook(BookSearchDTO bookSearchDTO) {
         return Result.success(bookService.getPage(bookSearchDTO));
     }
 
     @GetMapping("/search/suggestions")
-    public Result searchBookSuggestions(@RequestBody BookSearchDTO bookSearchDTO) {
+    public Result searchBookSuggestions(BookSearchDTO bookSearchDTO) {
         bookSearchDTO.setPageSize(10);
         return Result.success(bookService.getPage(bookSearchDTO));
     }
+
 
 }

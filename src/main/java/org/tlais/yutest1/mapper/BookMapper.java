@@ -1,5 +1,6 @@
 package org.tlais.yutest1.mapper;
 
+import com.github.pagehelper.Page;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
@@ -23,5 +24,5 @@ public interface BookMapper {
     @AutoFill(OperationType.UPDATE)
     void updateById(Book book);
 
-    List<Book> selectList(BookSearchDTO bookSearchDTO);
+    Page<Book> selectList(BookSearchDTO bookSearchDTO);
 }

@@ -50,3 +50,9 @@ jwt:
   user-secret-key: EmGZ1O+ZfWV9w/mcOXPXx+BlNxjm7xjW7TRgN7oG1tg=
   user-ttl: 72000000000
   user-token-name: authentication
+
+aliyun:
+  oss:
+    endpoint: https://oss-cn-beijing.aliyuncs.com
+    bucket-name: java-ai-yu-yi
+    region: cn-beijing

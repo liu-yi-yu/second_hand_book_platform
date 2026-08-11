@@ -57,15 +57,15 @@
         select * from books
         <where>
                 status = 'selling'
-            <if test="keyword != null">
+            <if test="keyword != null and keyword != ''">
                 and ((title like concat('%', #{keyword}, '%')
                     or author like concat('%', #{keyword}, '%')
                     or description like concat('%', #{keyword}, '%'))
             </if>
-            <if test="condition != null">
+            <if test="condition != null and condition != ''">
                 and `condition` = #{condition}
             </if>
-            <if test="category != null">
+            <if test="category != null and category != ''">
                 and category = #{category}
             </if>
             <if test="minPrice != null">

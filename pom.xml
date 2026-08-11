@@ -125,6 +125,14 @@
             <version>2.2.0</version>
         </dependency>
 
+        <!-- 上传文件到OSS -->
+        <dependency>
+            <groupId>com.aliyun.oss</groupId>
+            <artifactId>aliyun-sdk-oss</artifactId>
+            <version>3.18.2</version>
+        </dependency>
+
+
     </dependencies>
 
     <build>

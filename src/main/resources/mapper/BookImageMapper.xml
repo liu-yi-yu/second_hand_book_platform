@@ -6,8 +6,8 @@
 
     <insert id="insert">
         insert into book_image_relations (book_id, image_id, created_at ) values
-        <foreach collection="imageIds" item="imageId" open="(" close=")" separator=",">
-            #{bookId}, #{imageId}, #{createdAt}
+        <foreach collection="imageIds" item="imageId"  separator=",">
+            ( #{bookId}, #{imageId}, #{createdAt} )
         </foreach>
     </insert>
 

@@ -24,11 +24,11 @@ public class PageVO<T> {
     /** 总记录数 */
     private Long total;
 
-    /** 当前页码 */
-    private Integer pageNum;
-
-    /** 每页数量 */
-    private Integer pageSize;
+//    /** 当前页码 */
+//    private Integer pageNum;
+//
+//    /** 每页数量 */
+//    private Integer pageSize;
 
 
 }
