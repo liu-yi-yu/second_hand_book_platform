@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.tlais.yutest1.mapper.UserMapper">
+
+
+    <insert id="insert" parameterType="org.tlais.yutest1.domain.entity.User" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into users (id,username, password_hash, email, created_at, updated_at, role, status, credit_score)
+        values (#{id}, #{username}, #{passwordHash}, #{email}, #{createdAt}, #{updatedAt}, #{role}, #{status}, #{creditScore})
+    </insert>
+    <update id="update" parameterType="org.tlais.yutest1.domain.entity.User">
+        update users
+        <set>
+            <if test="username != null">
+                username = #{username},
+            </if>
+            <if test="passwordHash != null">
+                password_hash = #{passwordHash},
+            </if>
+            <if test="email != null">
+                email = #{email},
+            </if>
+            <if test="creditScore != null">
+                credit_score = #{creditScore},
+            </if>
+            <if test="role != null">
+                role = #{role},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="updatedAt != null">
+                updated_at = #{updatedAt},
+            </if>
+            <if test="avatarUrl != null">
+                avatar_url = #{avatarUrl},
+            </if>
+            <if test="bio != null">
+                bio = #{bio},
+            </if>
+            <if test="sellingCount != null">
+                selling_count = #{sellingCount},
+            </if>
+            <if test="soldCount != null">
+                sold_count = #{soldCount},
+            </if>
+        </set>
+    </update>
+</mapper>

@@ -1,0 +1,172 @@
+package org.tlais.yutest1.service.Impl;
+
+import com.github.pagehelper.PageHelper;
+import io.swagger.v3.oas.annotations.Operation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.tlais.yutest1.constant.BookException;
+import org.tlais.yutest1.constant.BookStatu;
+import org.tlais.yutest1.context.BaseContext;
+import org.tlais.yutest1.domain.dto.BookCreateDTO;
+import org.tlais.yutest1.domain.dto.BookSearchDTO;
+import org.tlais.yutest1.domain.dto.BookUpdateDTO;
+import org.tlais.yutest1.domain.entity.Book;
+import org.tlais.yutest1.domain.vo.*;
+import org.tlais.yutest1.mapper.BookImageMapper;
+import org.tlais.yutest1.mapper.BookMapper;
+import org.tlais.yutest1.mapper.ImageMapper;
+import org.tlais.yutest1.service.BookService;
+import org.tlais.yutest1.service.UserService;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+@Slf4j
+@Service
+public class BookServiceImpl implements BookService {
+    @Autowired
+    private BookMapper bookMapper;
+    @Autowired
+    private BookImageMapper bookImageMapper;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private ImageMapper imageMapper;
+
+
+    @Override
+    @Transactional
+    @Operation(summary = "添加图书")
+    public BookVO addBook(BookCreateDTO bookCreateDTO) {
+        log.info("bookCreateDTO:{}",bookCreateDTO);
+        // 插入图书基本信息
+        LocalDateTime now = LocalDateTime.now();
+        BookVO bookVO = new BookVO();
+        BeanUtils.copyProperties(bookCreateDTO,bookVO);
+
+        String currentId = BaseContext.getCurrentId();
+        UserProfileVO byId = userService.getById(currentId);
+        UserSimpleVO userSimpleVO = new UserSimpleVO();
+        BeanUtils.copyProperties(byId,userSimpleVO);
+        bookVO.setSeller(userSimpleVO);
+        bookVO.setSellerId(currentId);
+
+        String bookId = UUID.randomUUID().toString().substring(0, 20);
+        bookVO.setId(bookId);
+        bookVO.setOriginalPrice(bookCreateDTO.getOriginalPrice().toString());
+        bookVO.setSellingPrice(bookCreateDTO.getSellingPrice().toString());
+        log.info("bookVO:{}",bookVO);
+        bookMapper.insert(bookVO);
+        if (bookCreateDTO.getImageIds() != null && !bookCreateDTO.getImageIds().isEmpty()) {
+            // 插入图书图片关联
+            bookImageMapper.insert(bookId, bookCreateDTO.getImageIds());
+        }
+
+        //bookVO.setCreatedAt(now.toString());
+
+        return bookVO;
+    }
+
+    @Override
+    @Operation(summary = "根据ID查询图书详情")
+    public BookVO getById(String bookId) {
+        BookVO bookVO = new BookVO();
+        Book book = bookMapper.selectById(bookId);
+        if (book == null) {
+            throw new IllegalArgumentException(BookException.BOOK_NOT_FOUND);
+        }
+        BeanUtils.copyProperties(book,bookVO);
+        bookVO.setCreatedAt(book.getCreatedAt().toString());
+        bookVO.setUpdatedAt(book.getUpdatedAt().toString());
+
+        List<String> strings = bookImageMapper.selectList(bookId);
+        List<ImageVO> imageVOOS = imageMapper.getByIds(strings);
+        bookVO.setImages(imageVOOS);
+
+        // 设置卖家信息
+        UserProfileVO byId = userService.getById(book.getSellerId());
+        UserSimpleVO userSimpleVO = new UserSimpleVO();
+        BeanUtils.copyProperties(byId,userSimpleVO);
+        bookVO.setSeller(userSimpleVO);
+
+        return bookVO;
+    }
+
+    @Override
+    public BookVO updateBook(String bookId, BookUpdateDTO bookUpdateDTO) {
+        Book book = bookMapper.selectById(bookId);
+        if (book == null) {
+            throw new IllegalArgumentException(BookException.BOOK_NOT_FOUND);
+        }
+        if(book.getStatus().equals(BookStatu.SOLD)){
+            throw new IllegalArgumentException(BookException.BOOK_SOLD);
+        }
+        if(book.getStatus().equals(BookStatu.REMOVED)){
+            book.setStatus(BookStatu.SELLING);
+        }
+        if(!book.getSellerId().equals(BaseContext.getCurrentId())){
+            throw new IllegalArgumentException(BookException.BOOK_NOT_SOLD);
+        }
+        // 删除旧图片关联
+        deleteImageBook(bookId);
+
+        BeanUtils.copyProperties(bookUpdateDTO,book);
+//        book.setUpdatedAt(LocalDateTime.now());
+        bookMapper.updateById(book);
+        // 插入新图片关联
+        if (bookUpdateDTO.getImageIds() != null && !bookUpdateDTO.getImageIds().isEmpty()) {
+            bookImageMapper.insert(bookId, bookUpdateDTO.getImageIds());
+        }
+        return getById(bookId);
+    }
+
+    @Override
+    public void removeBook(String bookId) {
+        Book book = bookMapper.selectById(bookId);
+        if (book == null) {
+            throw new IllegalArgumentException(BookException.BOOK_NOT_FOUND);
+        }
+        if(!book.getSellerId().equals(BaseContext.getCurrentId())){
+            throw new IllegalArgumentException(BookException.BOOK_NOT_SOLD);
+        }
+        if(book.getStatus().equals(BookStatu.SOLD)){
+            throw new IllegalArgumentException(BookException.BOOK_SOLD);
+        }
+
+        book.setStatus(BookStatu.REMOVED);
+        book.setUpdatedAt(LocalDateTime.now());
+        bookMapper.updateById(book);
+    }
+
+    @Override
+    public PageVO<BookListVO> getPage(BookSearchDTO bookSearchDTO) {
+        // 设置默认排序字段
+        PageHelper.startPage
+                (bookSearchDTO.getPageNum(), bookSearchDTO.getPageSize()
+                        ,bookSearchDTO.getSortBy());
+        List<Book> books = bookMapper.selectList(bookSearchDTO);
+        PageVO<BookListVO> bookListVOPageVO = new PageVO<>();
+        books.forEach(book -> {
+            BookListVO bookListVO = new BookListVO();
+            BeanUtils.copyProperties(book,bookListVO);
+            bookListVO.setCreatedAt(book.getCreatedAt().toString());
+            List<String> strings = bookImageMapper.selectList(book.getId());
+            List<ImageVO> imageVOOS = imageMapper.getByIds(strings);
+            bookListVO.setCoverImage(imageVOOS.get(0).getThumbnailUrl());
+            bookListVOPageVO.getRecords().add(bookListVO);
+        });
+        return bookListVOPageVO;
+    }
+
+
+
+    public void deleteImageBook(String bookId) {
+        bookImageMapper.delete(bookId);
+    }
+
+
+}

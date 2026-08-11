@@ -1,0 +1,52 @@
+server:
+  port: 8081
+
+#两种模式区分
+#小驼峰（默认）
+#java：originalPrice
+#json："originalPrice":782.8
+#下划线 snake_case
+#java：originalPrice
+#json："original_price":782.8
+spring:
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+  profiles:
+    active: dev
+  main:
+    allow-circular-references: true
+  datasource:
+    driver-class-name: ${yu.datasource.driver-class-name}
+    url: jdbc:mysql://${yu.datasource.host}:${yu.datasource.port}/${yu.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${yu.datasource.username}
+    password: ${yu.datasource.password}
+  # property-naming-strategy: SNAKE_CASE
+    # 下划线，json original_price 映射 java originalPrice
+
+mybatis:
+  #mapper配置文件
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: org.tlais.yutest1.entity
+  configuration:
+    #开启驼峰命名
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    com:
+      sky:
+        mapper: debug
+        service: info
+        controller: info
+
+jwt:
+  # 设置jwt签名加密时使用的秘钥
+  admin-secret-key: UoqjG6QaF+qLyEFtfAG/Ew6g1sSMQwBHtmL6ZuvyoLk=
+  # 设置jwt过期时间
+  admin-ttl: 72000000000
+  # 设置前端传递过来的令牌名称
+  admin-token-name: Authorization
+
+  user-secret-key: EmGZ1O+ZfWV9w/mcOXPXx+BlNxjm7xjW7TRgN7oG1tg=
+  user-ttl: 72000000000
+  user-token-name: authentication

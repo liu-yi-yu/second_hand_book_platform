@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.tlais.yutest1.mapper.BookMapper">
+
+
+    <insert id="insert" >
+        insert into books (id,seller_id,title, author, isbn, original_price, selling_price, `condition`, category, description, status, view_count, version, created_at, updated_at)
+        values (#{id}, #{sellerId}, #{title}, #{author}, #{isbn}, #{originalPrice}, #{sellingPrice}, #{condition}, #{category}, #{description}, #{status}, #{viewCount}, #{version}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="updateById">
+        update books
+        <set>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="viewCount != null">
+                view_count = #{viewCount},
+            </if>
+            <if test="version != null">
+                version = #{version},
+            </if>
+            <if test="description != null">
+                description = #{description},
+            </if>
+            <if test="condition != null">
+                `condition` = #{condition},
+            </if>
+            <if test="category != null">
+                category = #{category},
+            </if>
+            <if test="isbn != null">
+                isbn = #{isbn},
+            </if>
+            <if test="originalPrice != null">
+                original_price = #{originalPrice},
+            </if>
+            <if test="sellingPrice != null">
+                selling_price = #{sellingPrice},
+            </if>
+            <if test="title != null">
+                title = #{title},
+            </if>
+            <if test="author != null">
+                author = #{author},
+            </if>
+            <if test="updatedAt != null">
+                updated_at = #{updatedAt},
+            </if>
+
+        </set>
+         where id = #{id}
+    </update>
+
+    <select id="selectList" resultType="org.tlais.yutest1.domain.entity.Book">
+        select * from books
+        <where>
+                status = 'selling'
+            <if test="keyword != null">
+                and ((title like concat('%', #{keyword}, '%')
+                    or author like concat('%', #{keyword}, '%')
+                    or description like concat('%', #{keyword}, '%'))
+            </if>
+            <if test="condition != null">
+                and `condition` = #{condition}
+            </if>
+            <if test="category != null">
+                and category = #{category}
+            </if>
+            <if test="minPrice != null">
+                and original_price >= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                and original_price <![CDATA[<=]]> #{maxPrice}
+            </if>
+        </where>
+    </select>
+</mapper>

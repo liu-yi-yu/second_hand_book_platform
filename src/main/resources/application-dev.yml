@@ -1,0 +1,26 @@
+yu:
+  datasource:
+     driver-class-name: com.mysql.cj.jdbc.Driver
+     host: localhost
+     port: 3306
+     database: book_trade
+     username: root
+     password: 727328
+  redis:
+    host: localhost
+    port: 6379
+    #    password:
+    database: 0
+#  alioss:
+#    access-key-id: java-ai-yu-yi
+#    access-key-secret: U6k1brOZ8gaOIXv3nXbulGTUzy6Pd7
+#    endpoint: oss-cn-beijing.aliyuncs.com
+#    bucket-name: java-ai-yu-yi
+  aliyun:
+    oss:
+      endpoint: https://oss-cn-beijing.aliyuncs.com
+      bucket-name: java-ai-yu-yi
+      region: cn-beijing
+  wechat:
+    secret: f8a75aee320e9f1d059b3c821358666f
+    appid: wx2357993295cdb4de
