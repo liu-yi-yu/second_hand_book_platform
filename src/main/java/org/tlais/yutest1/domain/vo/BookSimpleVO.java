@@ -21,6 +21,15 @@ public class BookSimpleVO implements Serializable {
     /** 书名 */
     private String title;
 
+    /** 作者 */
+    private String author;
+
+    /** 书籍状态 */
+    private String status;
+
+    /** 书籍状态 */
+    private String condition;
+
     /** 封面图URL */
     private String coverImage;
 

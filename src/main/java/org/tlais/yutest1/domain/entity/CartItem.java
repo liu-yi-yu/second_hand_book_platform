@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 @Builder
 public class CartItem implements Serializable {
 
-    /** 购物车项ID（UUID） */
+    /** 购物车项ID */
     private String id;
 
     /** 用户ID */

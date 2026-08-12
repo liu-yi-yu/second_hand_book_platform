@@ -76,4 +76,11 @@
             </if>
         </where>
     </select>
+
+    <select id="selectByIds" resultType="org.tlais.yutest1.domain.entity.Book">
+        select * from books where
+        <foreach collection="bookIds" item="item" separator="or">
+            id = #{item}
+        </foreach>
+    </select>
 </mapper>

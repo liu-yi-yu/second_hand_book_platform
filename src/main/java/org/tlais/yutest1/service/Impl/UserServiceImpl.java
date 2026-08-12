@@ -16,6 +16,7 @@ import org.tlais.yutest1.service.UserService;
 import org.springframework.stereotype.Service;
 import org.tlais.yutest1.domain.entity.User;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -33,6 +34,9 @@ public class UserServiceImpl implements UserService {
         user.setPasswordHash(hashpw);
         // 生成UUID作为用户ID
         user.setId(UUID.randomUUID().toString().substring(0, 10));
+        LocalDateTime now = LocalDateTime.now();
+        user.setCreatedAt(now);
+        user.setUpdatedAt(now);
         int insert = userMapper.insert(user);
         if (insert == 0) {
             throw new BusinessException(40001,"注册失败");

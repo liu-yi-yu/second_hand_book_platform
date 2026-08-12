@@ -1,11 +1,9 @@
 package org.tlais.yutest1.mapper;
 
 import com.github.pagehelper.Page;
-import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.tlais.yutest1.annotation.AutoFill;
-import org.tlais.yutest1.domain.dto.BookCreateDTO;
 import org.tlais.yutest1.domain.dto.BookSearchDTO;
 import org.tlais.yutest1.domain.entity.Book;
 import org.tlais.yutest1.domain.vo.BookVO;
@@ -25,4 +23,6 @@ public interface BookMapper {
     void updateById(Book book);
 
     Page<Book> selectList(BookSearchDTO bookSearchDTO);
+
+    List<Book> selectByIds(List<String> bookIds);
 }

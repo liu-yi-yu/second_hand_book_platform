@@ -9,7 +9,6 @@ import org.tlais.yutest1.domain.entity.User;
 
 @Mapper
 public interface UserMapper {
-    @AutoFill(OperationType.INSERT)
     int insert(User user);
 
     @Select("select * from users where username = #{username}")
