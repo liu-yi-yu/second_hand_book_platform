@@ -9,4 +9,5 @@ public class SortBy {
     public static final String PRICE_ASC = "selling_price asc";
     public static final String PRICE_DESC = "selling_price desc";
     public static final String POPULAR = "view_count desc";
+    public static final String CREATE_TIME_DESC = "created_at desc";
 }

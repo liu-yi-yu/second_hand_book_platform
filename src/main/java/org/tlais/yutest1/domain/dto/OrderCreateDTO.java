@@ -1,6 +1,7 @@
 package org.tlais.yutest1.domain.dto;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 import jakarta.validation.constraints.NotBlank;
 

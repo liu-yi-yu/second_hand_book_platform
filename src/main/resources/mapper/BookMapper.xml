@@ -52,6 +52,15 @@
         </set>
          where id = #{id}
     </update>
+    <update id="updateByIds">
+        update books
+        set status = 'sold',
+            updated_at = #{updatedAt}
+        where
+        <foreach collection="books" item="item" separator="or">
+            id = #{item.id}
+        </foreach>
+    </update>
 
     <select id="selectList" resultType="org.tlais.yutest1.domain.entity.Book">
         select * from books

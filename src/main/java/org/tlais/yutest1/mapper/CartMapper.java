@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.tlais.yutest1.domain.entity.CartItem;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Mapper
@@ -21,4 +22,8 @@ public interface CartMapper {
 
     @Delete("delete from cart_items where book_id = #{bookId}")
     void deleteById(String bookId);
+
+
+    void deleteBatch(ArrayList<String> bookIds);
+
 }

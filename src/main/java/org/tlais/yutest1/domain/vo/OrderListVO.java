@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.Data;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * 订单列表项视图对象
@@ -16,7 +17,10 @@ import java.io.Serializable;
 public class OrderListVO implements Serializable {
 
     /** 订单ID */
-    private String id;
+    private Integer id;
+
+    /** 书ID */
+    private String bookId;
 
     /** 书名 */
     private String bookTitle;
@@ -25,7 +29,7 @@ public class OrderListVO implements Serializable {
     private String bookCoverImage;
 
     /** 金额 */
-    private String amount;
+    private BigDecimal amount;
 
     /** 状态 */
     private String status;
@@ -38,5 +42,17 @@ public class OrderListVO implements Serializable {
 
     /** 创建时间 */
     private String createdAt;
+
+    //卖家确认时间
+    private String confirmedAt;
+
+    //发货时间
+    private String shippedAt;
+
+    //确认收货时间
+    private String receivedAt;
+
+    //完成时间
+    private String completedAt;
 
 }

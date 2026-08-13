@@ -9,6 +9,8 @@ import org.tlais.yutest1.domain.entity.Book;
 import org.tlais.yutest1.domain.vo.BookVO;
 import org.tlais.yutest1.enumeration.OperationType;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Mapper
@@ -25,4 +27,6 @@ public interface BookMapper {
     Page<Book> selectList(BookSearchDTO bookSearchDTO);
 
     List<Book> selectByIds(List<String> bookIds);
+
+    void updateByIds(List<Book> books, LocalDateTime updatedAt);
 }

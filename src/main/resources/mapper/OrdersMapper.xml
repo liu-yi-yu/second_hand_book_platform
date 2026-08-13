@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.tlais.yutest1.mapper.OrdersMapper">
+
+
+    <insert id="insertBatch">
+        insert into orders (id, book_id, seller_id, buyer_id, created_at, updated_at, amount, status)
+        values
+        <foreach collection="orderList" item="item"  separator=",">
+           (#{item.id}, #{item.bookId}, #{item.sellerId}, #{item.buyerId}, #{item.createdAt}, #{item.updatedAt}, #{item.amount}, #{item.status})
+        </foreach>
+    </insert>
+    <update id="updateById">
+        update orders
+        set status = #{status}, updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+    <select id="selectList" resultType="org.tlais.yutest1.domain.entity.Order">
+        select * from orders
+        <where>
+            <if test="sellerId != null">
+                seller_id = #{sellerId}
+            </if>
+            <if test="buyerId != null">
+                buyer_id = #{buyerId}
+            </if>
+            <if test="status != null">
+                and
+                <foreach collection="status" item="item" separator="or" open="(" close=")">
+                    status = #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
+</mapper>
