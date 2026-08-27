@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.tlais.yutest1.mapper.NotificationsMapper">
+    <update id="updateNotifications">
+        update notifications set is_read = 1 where is_read = 0
+        <if test="ids != null ">
+            and id in
+            <foreach collection="ids" item="item"  separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+    </update>
+</mapper>

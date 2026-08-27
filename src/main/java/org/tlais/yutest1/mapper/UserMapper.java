@@ -7,6 +7,8 @@ import org.tlais.yutest1.annotation.AutoFill;
 import org.tlais.yutest1.enumeration.OperationType;
 import org.tlais.yutest1.domain.entity.User;
 
+import java.time.LocalDateTime;
+
 @Mapper
 public interface UserMapper {
     int insert(User user);
@@ -22,4 +24,10 @@ public interface UserMapper {
 
     @AutoFill(OperationType.UPDATE)
     void update(User user);
+
+    @Select("select count(*) from users")
+    Integer getCount();
+
+    @Select("select count(*) from users where status = 'active' and last_login_at >= #{now}")
+    Integer getCount7d(LocalDateTime now);
 }

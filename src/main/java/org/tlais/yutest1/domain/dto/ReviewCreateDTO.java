@@ -2,13 +2,7 @@ package org.tlais.yutest1.domain.dto;
 
 import java.io.Serializable;
 
-import jakarta.validation.constraints.Max;
-
-import jakarta.validation.constraints.Min;
-
-import jakarta.validation.constraints.NotBlank;
-
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 
 import lombok.AllArgsConstructor;
 
@@ -25,8 +19,8 @@ import lombok.NoArgsConstructor;
 public class ReviewCreateDTO implements Serializable {
 
     /** 评价的订单ID */
-    @NotBlank(message = "订单ID不能为空")
-    private String orderId;
+    @NotNull(message = "订单ID不能为空")
+    private Integer orderId;
 
     /** 评分（1-5） */
     @NotNull(message = "评分不能为空")
@@ -35,6 +29,7 @@ public class ReviewCreateDTO implements Serializable {
     private Integer rating;
 
     /** 评价内容（可选） */
+    @Size( max = 500)
     private String content;
 
 }

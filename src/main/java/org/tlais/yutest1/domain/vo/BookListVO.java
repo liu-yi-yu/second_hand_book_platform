@@ -52,6 +52,9 @@ public class BookListVO implements Serializable {
     /** 卖家用户名 */
     private String sellerName;
 
+    /** 卖家ID */
+    private String sellerId;
+
     /** 发布时间 */
     private String createdAt;
 

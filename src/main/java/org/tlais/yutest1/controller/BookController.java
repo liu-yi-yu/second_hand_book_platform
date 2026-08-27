@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import org.tlais.yutest1.domain.dto.BookCreateDTO;
 import org.tlais.yutest1.domain.dto.BookSearchDTO;
 import org.tlais.yutest1.domain.dto.BookUpdateDTO;
-import org.tlais.yutest1.domain.dto.PageDTO;
 import org.tlais.yutest1.domain.entity.Result;
 import org.tlais.yutest1.service.BookService;
 

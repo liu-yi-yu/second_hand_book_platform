@@ -4,7 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.Data;
+import org.tlais.yutest1.domain.entity.Message;
+
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 消息视图对象
@@ -15,19 +18,10 @@ import java.io.Serializable;
 @NoArgsConstructor
 public class MessageVO implements Serializable {
 
-    /** 消息ID */
-    private String id;
+    /** 消息列表 */
+    private List<Message> message;
 
-    /** 订单ID */
-    private String orderId;
-
-    /** 发送者信息 */
-    private UserSimpleVO sender;
-
-    /** 消息内容 */
-    private String content;
-
-    /** 发送时间 */
-    private String createdAt;
+    /** 是否还有更多消息 */
+    private boolean hasMore;
 
 }

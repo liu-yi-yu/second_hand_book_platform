@@ -25,7 +25,7 @@ public class Review implements Serializable {
     private String id;
 
     /** 关联订单ID */
-    private String orderId;
+    private Integer orderId;
 
     /** 评价者ID */
     private String reviewerId;

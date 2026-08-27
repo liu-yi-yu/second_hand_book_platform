@@ -61,6 +61,18 @@
             id = #{item.id}
         </foreach>
     </update>
+    <update id="updateStatus">
+        update books
+        set status = #{status},
+            updated_at = #{updatedAt}
+        where seller_id = #{id} and status = #{statusBefore}
+    </update>
+    <update id="updateStatusByBookId">
+        update books
+        set status = #{status},
+            updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
 
     <select id="selectList" resultType="org.tlais.yutest1.domain.entity.Book">
         select * from books
@@ -91,5 +103,9 @@
         <foreach collection="bookIds" item="item" separator="or">
             id = #{item}
         </foreach>
+    </select>
+    <select id="selectBySellerId" resultType="org.tlais.yutest1.domain.entity.Book">
+        select * from books where seller_id = #{id}
+        and status = 'selling'
     </select>
 </mapper>

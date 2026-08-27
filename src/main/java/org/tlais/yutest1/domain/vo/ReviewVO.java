@@ -16,10 +16,10 @@ import java.io.Serializable;
 public class ReviewVO implements Serializable {
 
     /** 评价ID */
-    private String id;
+    private Integer id;
 
     /** 关联订单ID */
-    private String orderId;
+    private Integer orderId;
 
     /** 评价者信息 */
     private UserSimpleVO reviewer;

@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 public class Order implements Serializable {
 
     /** 订单ID（UUID） */
-    private String id;
+    private Integer id;
 
     /** 买家ID */
     private String buyerId;

@@ -16,7 +16,7 @@ import java.io.Serializable;
 public class NotificationVO implements Serializable {
 
     /** 通知ID */
-    private String id;
+    private Integer id;
 
     /** 通知类型 */
     private String type;
@@ -31,7 +31,9 @@ public class NotificationVO implements Serializable {
     private Boolean isRead;
 
     /** 关联业务ID */
-    private String relatedId;
+    private String relatedBookId;
+
+    private Integer relatedOrderId;
 
     /** 创建时间 */
     private String createdAt;

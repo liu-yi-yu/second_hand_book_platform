@@ -25,10 +25,12 @@ public class Message implements Serializable {
     private String id;
 
     /** 关联订单ID */
-    private String orderId;
+    private Integer orderId;
 
     /** 发送者ID */
     private String senderId;
+
+    private String receiverId;
 
     /** 消息内容 */
     private String content;

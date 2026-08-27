@@ -33,4 +33,27 @@
             </if>
         </where>
     </select>
+    <select id="getCountByStatus" resultType="java.lang.Integer">
+        select count(*) from orders
+        <where>
+            <if test="status != null">
+                status = #{status}
+            </if>
+            <if test="now != null">
+                created_at >= #{now}
+            </if>
+        </where>
+    </select>
+    <select id="getCountByStatus7d" resultType="java.lang.Integer">
+        select count(*) from orders
+        <where>
+            <if test="status != null">
+                status = #{status}
+            </if>
+            <if test="now != null">
+                created_at >= #{now}
+            </if>
+        </where>
+        group by created_at order by created_at desc
+    </select>
 </mapper>

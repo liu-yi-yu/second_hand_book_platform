@@ -1,11 +1,13 @@
 package org.tlais.yutest1.mapper;
 
 import com.github.pagehelper.Page;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.tlais.yutest1.annotation.AutoFill;
 import org.tlais.yutest1.domain.dto.BookSearchDTO;
 import org.tlais.yutest1.domain.entity.Book;
+import org.tlais.yutest1.domain.vo.BookListVO;
 import org.tlais.yutest1.domain.vo.BookVO;
 import org.tlais.yutest1.enumeration.OperationType;
 
@@ -29,4 +31,21 @@ public interface BookMapper {
     List<Book> selectByIds(List<String> bookIds);
 
     void updateByIds(List<Book> books, LocalDateTime updatedAt);
+
+    List<Book> selectBySellerId(String id);
+
+    void updateStatus(String id, String status ,String statusBefore,LocalDateTime updatedAt);
+
+    @Select("select id, seller_id, title, author, isbn, original_price" +
+            ", selling_price, `condition`, category, description, status, " +
+            "version, created_at, updated_at from books")
+    Page<BookListVO> getBookList();
+
+    @Delete("delete from books where id = #{id}")
+    void deleteById(String id);
+
+    void updateStatusByBookId(String id, String status, LocalDateTime now);
+
+    @Select("select count(*) from books where status = 'selling'")
+    Integer getCountSelling();
 }
