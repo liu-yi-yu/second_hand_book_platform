@@ -21,7 +21,7 @@ public class ReviewController {
     }
 
     @GetMapping("/users/{user_id}/reviews")
-    public Result getReviews(@PathVariable String userId, PageDTO pageDTO) {
+    public Result getReviews(@PathVariable("user_id") String userId, PageDTO pageDTO) {
         return Result.success(reviewService.getReviews(userId, pageDTO));
     }
 }

@@ -3,10 +3,7 @@ package org.tlais.yutest1.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.tlais.yutest1.domain.entity.Result;
 import org.tlais.yutest1.service.MessagesService;
 
@@ -32,5 +29,11 @@ public class MessagesController {
         //  ```
         //  PUT /api/orders/:order_id/messages/read
         return Result.success(messagesService.getUnreadMessagesCount());
+    }
+
+    @PutMapping("/orders/{order_id}/messages/read")
+    public Result readMessages(@PathVariable("order_id") Integer order_id){
+        messagesService.readMessages(order_id);
+        return Result.success();
     }
 }

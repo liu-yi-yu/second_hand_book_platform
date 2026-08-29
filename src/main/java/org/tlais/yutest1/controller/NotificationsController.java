@@ -3,6 +3,7 @@ package org.tlais.yutest1.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.tlais.yutest1.domain.dto.NotificationsDTO;
+import org.tlais.yutest1.domain.dto.NotificationsIdsDTO;
 import org.tlais.yutest1.domain.dto.PageDTO;
 import org.tlais.yutest1.domain.entity.Result;
 import org.tlais.yutest1.service.NotificationsService;
@@ -19,7 +20,7 @@ public class NotificationsController {
     }
 
     @PutMapping("/read")
-    public Result updateNotifications(@RequestBody Integer[] ids) {
-        return Result.success(notificationsService.updateNotifications(ids));
+    public Result updateNotifications(@RequestBody NotificationsIdsDTO notificationsIdsDTO) {
+        return Result.success(notificationsService.updateNotifications(notificationsIdsDTO.getIds()));
     }
 }

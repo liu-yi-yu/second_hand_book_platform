@@ -11,15 +11,15 @@
     <select id="getPage" resultType="org.tlais.yutest1.domain.vo.UserProfileVO">
         select * from users
         <where>
-            <if test="admin.keyword != null">
-                username like concat('%',#{admin.keyword},'%')
-                or email like concat('%',#{admin.keyword},'%')
+            <if test="keyword != null and keyword != ''">
+                username like concat('%',#{keyword},'%')
+                or email like concat('%',#{keyword},'%')
             </if>
-            <if test="admin.role != null">
-                role = #{admin.role}
+            <if test="role != null and role != ''">
+                role = #{role}
             </if>
-            <if test="admin.status != null">
-                status = #{admin.status}
+            <if test="status != null and status != ''">
+                status = #{status}
             </if>
         </where>
     </select>

@@ -22,4 +22,12 @@ public class PageDTO implements Serializable {
     /** 每页数量（默认20） */
     private Integer pageSize = 20;
 
+    public Integer getPage() {
+        return page == null ? 1 : page;
+    }
+
+    public Integer getPageSize() {
+        return pageSize == null ? 20 : pageSize;
+    }
+
 }

@@ -30,7 +30,6 @@ public interface OrdersMapper {
 
     List<Order> selectList(OrdersRole orderRole);
 
-    @Select("select * from orders where id in #{orderIds}")
     List<Order> selectByIdList(HashSet<Integer> orderIds);
 
     @Select("select * from orders")

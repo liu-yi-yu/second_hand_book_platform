@@ -70,7 +70,7 @@
     <update id="updateStatusByBookId">
         update books
         set status = #{status},
-            updated_at = #{updatedAt}
+            updated_at = #{now}
         where id = #{id}
     </update>
 

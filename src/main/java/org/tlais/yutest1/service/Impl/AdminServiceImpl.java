@@ -13,7 +13,9 @@ import org.tlais.yutest1.domain.dto.PageDTO;
 import org.tlais.yutest1.domain.entity.Book;
 import org.tlais.yutest1.domain.entity.Order;
 import org.tlais.yutest1.domain.entity.OrderCountByStatus;
+import org.tlais.yutest1.domain.entity.User;
 import org.tlais.yutest1.domain.vo.*;
+import org.tlais.yutest1.exception.BusinessException;
 import org.tlais.yutest1.mapper.*;
 import org.tlais.yutest1.service.AdminService;
 
@@ -46,7 +48,11 @@ public class AdminServiceImpl implements AdminService {
     public void updateStatus(String id, AdminDTO adminDTO) {
         String currentId = BaseContext.getCurrentId();
         if (currentId.equals(id)) {
-            throw new IllegalArgumentException("不能更新自己的状态");
+            throw new IllegalArgumentException(UserException.CANNOT_UPDATE_OWN_STATUS);
+        }
+        User user = userMapper.selectById(id);
+        if(user == null){
+            throw new BusinessException(UserException.USER_NOT_FOUND);
         }
 
         if(adminDTO.getStatus().equals(Status.USER_ACTIVE)){

@@ -56,4 +56,13 @@
         </where>
         group by created_at order by created_at desc
     </select>
+    <select id="selectByIdList" resultType="org.tlais.yutest1.domain.entity.Order">
+        <if test="orderIds != null and orderIds.size() > 0">
+            select * from orders
+            where id in
+            <foreach collection="orderIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
 </mapper>

@@ -13,7 +13,7 @@ public class ByOrder implements Serializable {
     private Integer orderId;
     private String title;
     private String userName;
-    private Integer count;
+    private Integer count=0;
     private String content;
 
 }

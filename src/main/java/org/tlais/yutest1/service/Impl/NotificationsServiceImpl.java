@@ -27,7 +27,7 @@ public class NotificationsServiceImpl implements NotificationsService {
             isRead=0;
         }
 
-        PageHelper.startPage(notificationsDTO.getPageDTO().getPage(), notificationsDTO.getPageDTO().getPageSize());
+        PageHelper.startPage(notificationsDTO.getPage(), notificationsDTO.getPageSize());
         List<NotificationVO> notificationVOS = notificationsMapper.fillNotifications(isRead, BaseContext.getCurrentId());
 
         PageVO<NotificationVO> notificationVOPageVO = new PageVO<>(notificationVOS, (long) notificationVOS.size());

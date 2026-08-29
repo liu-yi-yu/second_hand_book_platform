@@ -7,6 +7,6 @@
     </select>
     <select id="selectUnread" resultType="org.tlais.yutest1.domain.entity.Message">
         select * from messages where  is_read = 0 and (receiver_id = #{currentId} or sender_id = #{currentId})
-        group by order_id
+        order by order_id desc
     </select>
 </mapper>
