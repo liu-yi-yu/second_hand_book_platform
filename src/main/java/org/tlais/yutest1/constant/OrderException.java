@@ -19,4 +19,8 @@ public class OrderException {
     public static final String USER_NOT_EXIST = "用户不存在";
     //书籍不存在
     public static final String BOOK_NOT_EXIST = "书籍不存在";
+    //更新订单状态失败，书籍状态异常
+    public static final String BOOK_STATUS_ERROR = "更新订单状态失败，书籍状态异常";
+    //更新订单状态失败，书籍版本异常
+    public static final String BOOK_VERSION_ERROR = "更新订单状态失败，书籍版本异常";
 }

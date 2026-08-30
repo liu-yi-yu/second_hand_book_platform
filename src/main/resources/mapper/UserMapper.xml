@@ -8,6 +8,17 @@
         insert into users (id,username, password_hash, email, created_at, updated_at, role, status, credit_score)
         values (#{id}, #{username}, #{passwordHash}, #{email}, #{createdAt}, #{updatedAt}, #{role}, #{status}, #{creditScore})
     </insert>
+
+    <update id="addCredit">
+        update users
+        set credit_score = credit_score + #{addCredit}
+        ,updated_at = #{now}
+        where
+        <foreach collection="p3" item="order" open="(" close=")" separator="or">
+            id = #{order.sellerId} or id = #{order.buyerId}
+        </foreach>
+    </update>
+
     <update id="update" parameterType="org.tlais.yutest1.domain.entity.User">
         update users
         <set>
@@ -45,5 +56,30 @@
                 sold_count = #{soldCount},
             </if>
         </set>
+    </update>
+
+    <update id="minusCredit" parameterType="java.util.List">
+        update users
+        set credit_score = credit_score + #{minusCredit}
+            ,updated_at = #{now}
+        where
+        <foreach collection="p1" item="order" open="(" close=")" separator="or">
+            id = #{order.sellerId}
+        </foreach>
+    </update>
+    <update id="decCredit">
+        UPDATE users
+        SET
+        updated_at = #{now},
+        credit_score = CASE id
+        <foreach collection="userCredits" item="userCredit">
+            WHEN #{userCredit.userId} THEN credit_score + #{userCredit.credit}
+        </foreach>
+        ELSE credit_score
+        END
+        WHERE id IN
+        <foreach collection="userCredits" item="userCredit" open="(" separator="," close=")">
+            #{userCredit.userId}
+        </foreach>
     </update>
 </mapper>

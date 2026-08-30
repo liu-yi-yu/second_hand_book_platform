@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.tlais.yutest1.constant.BookException;
 import org.tlais.yutest1.constant.BookStatu;
 import org.tlais.yutest1.context.BaseContext;
+import org.tlais.yutest1.context.BookViewCounter;
 import org.tlais.yutest1.domain.dto.BookCreateDTO;
 import org.tlais.yutest1.domain.dto.BookSearchDTO;
 import org.tlais.yutest1.domain.dto.BookUpdateDTO;
@@ -42,6 +43,8 @@ public class BookServiceImpl implements BookService {
     private ImageService imageService;
     @Autowired
     private ImageMapper imageMapper;
+    @Autowired
+    private BookViewCounter bookViewCounter;
 
 
     @Override
@@ -102,6 +105,9 @@ public class BookServiceImpl implements BookService {
         BeanUtils.copyProperties(byId,userSimpleVO);
         bookVO.setSeller(userSimpleVO);
 
+        // 访问量 +1
+        bookViewCounter.increment(bookId);
+
         return bookVO;
     }
 
@@ -131,6 +137,9 @@ public class BookServiceImpl implements BookService {
         if (bookUpdateDTO.getImageIds() != null && !bookUpdateDTO.getImageIds().isEmpty()) {
             bookImageMapper.insert(bookId, bookUpdateDTO.getImageIds(),LocalDateTime.now());
         }
+        // 更新访问量
+        bookViewCounter.increment(bookId);
+
         return getById(bookId);
     }
 

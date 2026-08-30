@@ -16,6 +16,14 @@
         set status = #{status}, updated_at = #{updatedAt}
         where id = #{id}
     </update>
+    <update id="cancelOrder">
+        update orders
+        set status = #{status}, updated_at = #{updatedAt}
+        where id in
+        <foreach collection="orders" item="item" separator="," open="(" close=")">
+            #{item.id}
+        </foreach>
+    </update>
     <select id="selectList" resultType="org.tlais.yutest1.domain.entity.Order">
         select * from orders
         <where>

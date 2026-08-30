@@ -4,9 +4,11 @@ import com.github.pagehelper.Page;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 import org.tlais.yutest1.annotation.AutoFill;
 import org.tlais.yutest1.domain.dto.BookSearchDTO;
 import org.tlais.yutest1.domain.entity.Book;
+import org.tlais.yutest1.domain.entity.Order;
 import org.tlais.yutest1.domain.vo.BookListVO;
 import org.tlais.yutest1.domain.vo.BookVO;
 import org.tlais.yutest1.enumeration.OperationType;
@@ -30,7 +32,7 @@ public interface BookMapper {
 
     List<Book> selectByIds(List<String> bookIds);
 
-    void updateByIds(List<Book> books, LocalDateTime updatedAt);
+    Integer updateByIds(List<Book> books, LocalDateTime updatedAt);
 
     List<Book> selectBySellerId(String id);
 
@@ -48,4 +50,9 @@ public interface BookMapper {
 
     @Select("select count(*) from books where status = 'selling'")
     Integer getCountSelling();
+
+    void updateStatusByBookIds(List<Order> p1, String status, LocalDateTime now);
+
+    @Update("update books set view_count = view_count + #{viewCounter} ,updated_at = #{now} where id = #{bookId}")
+    void addViewCount(String bookId, Long viewCounter, LocalDateTime now);
 }

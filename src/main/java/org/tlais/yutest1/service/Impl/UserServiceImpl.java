@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.tlais.yutest1.constant.Status;
+import org.tlais.yutest1.constant.UserException;
 import org.tlais.yutest1.context.BaseContext;
 import org.tlais.yutest1.domain.dto.UserDTO;
 import org.tlais.yutest1.domain.dto.UserUpdateDTO;
@@ -27,6 +29,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User register(UserDTO userDTO) {
+        // 验证用户名是否存在
+        User selectUser = userMapper.selectByUsername(userDTO.getUsername());
+        if (selectUser != null) {
+            throw new BusinessException(40001, UserException.USER_USERNAME_EXIST);
+        }
+        User selectEmail=userMapper.selectByEmail(userDTO.getEmail());
+        if (selectEmail != null) {
+            throw new BusinessException(40001, UserException.USER_EMAIL_EXIST);
+        }
+
         /// 对密码进行加密
         String hashpw = BCrypt.hashpw(userDTO.getPassword(), BCrypt.gensalt());
         User user = new User();
@@ -39,7 +51,7 @@ public class UserServiceImpl implements UserService {
         user.setUpdatedAt(now);
         int insert = userMapper.insert(user);
         if (insert == 0) {
-            throw new BusinessException(40001,"注册失败");
+            throw new BusinessException(40001, UserException.USER_REGISTER_FAILED);
         }
         return user;
     }
@@ -50,7 +62,10 @@ public class UserServiceImpl implements UserService {
         // 验证密码是否匹配
         // 对用户输入的密码进行加密
         if (selectUser == null||!BCrypt.checkpw(userDTO.getPassword(), selectUser.getPasswordHash())) {
-            throw new BusinessException("用户名或密码错误");
+            throw new BusinessException(40001, UserException.USER_PASSWORD_ERROR);
+        }
+        if (selectUser.getStatus().equals(Status.USER_DISABLED)) {
+            throw new BusinessException(40001, UserException.USER_STATUS_INVALID);
         }
         return selectUser;
     }

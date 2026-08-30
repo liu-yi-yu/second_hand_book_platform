@@ -10,8 +10,8 @@ import java.util.List;
 
 @Mapper
 public interface MessagesMapper {
-    @Select("select count(*) from messages")
-    int fillMax();
+    @Select("select count(*) from messages where order_id = #{orderId}")
+    int fillMax(Integer orderId);
 
     List<Message> selectByOrderId(Integer orderId);
 
@@ -19,4 +19,15 @@ public interface MessagesMapper {
 
     @Update("update messages set is_read = 1 where order_id = #{orderId}")
     void updateRead(Integer orderId);
+
+    // 新增：保存一条消息（对应 resources/mapper/MessagesMapper.xml 里的 insert）
+    int insert(Message message);
+
+    // 新增：按客户端ID查重，防止同一条消息重复落库
+    @Select("select count(*) from messages where client_id = #{clientId}")
+    int countByClientId(String clientId);
+
+    // 新增：按客户端ID查询完整消息（插入后用它重新查一次，拿到数据库自增的 id）
+    @Select("select * from messages where client_id = #{clientId}")
+    Message selectByClientId(String clientId);
 }

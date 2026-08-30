@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
-    //TODO: 设置一个管理员判断接口，在登录时判断是否为管理员
+
     @Autowired
     private AdminService adminService;
 

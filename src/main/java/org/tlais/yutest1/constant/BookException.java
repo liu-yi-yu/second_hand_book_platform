@@ -6,4 +6,6 @@ public class BookException {
     public static final String BOOK_REMOVED = "已删除图书不能更新";
     public static final String BOOK_SELLING = "正在销售图书不能更新";
     public static final String BOOK_NOT_SOLD = "非卖家不能更新";
+    public static final String BOOK_VERSION_ERROR = "图书版本异常";
+    public static final String BOOK_STATUS_ERROR = "图书状态异常";
 }

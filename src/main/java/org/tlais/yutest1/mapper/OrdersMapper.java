@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Select;
 import org.tlais.yutest1.annotation.AutoFill;
 import org.tlais.yutest1.domain.entity.Order;
 import org.tlais.yutest1.domain.entity.OrderCountByStatus;
+import org.tlais.yutest1.domain.entity.OrderCountByUserId;
 import org.tlais.yutest1.domain.entity.OrdersRole;
 import org.tlais.yutest1.domain.vo.OrderListVO;
 import org.tlais.yutest1.domain.vo.OrderVO;
@@ -48,4 +49,19 @@ public interface OrdersMapper {
     ArrayList<OrderCountByStatus> getCountTotalStatus();
 
     ArrayList<Integer> getCountByStatus7d(String status, LocalDateTime now);
+
+    void cancelOrder(List<Order> orders,String status,LocalDateTime updatedAt);
+
+    @Select("select orders.buyer_id as userId, count(*) as orderCount from orders where status = 'cancelled' and updated_at > #{deadline}  group by buyer_id")
+    List<OrderCountByUserId> getOrderCountByUserId(LocalDateTime deadline);
+
+    @Select("select * from orders where status = #{status} and created_at < #{localDateTime}")
+    List<Order> checkOrderPendingTimeout(String status, LocalDateTime localDateTime);
+
+    @Select("select * from orders where status = #{status} and confirmed_at < #{localDateTime}")
+    List<Order> checkOrderConfirmedTimeout(String status, LocalDateTime localDateTime);
+
+    @Select("select * from orders where status = #{status} and received_at < #{deadline}")
+    List<Order> checkOrderReceivedTimeout(String status, LocalDateTime deadline);
+
 }

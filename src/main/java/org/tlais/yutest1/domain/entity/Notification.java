@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 public class Notification implements Serializable {
 
     /** 通知ID（UUID） */
-    private String id;
+    private Integer id;
 
     /** 目标用户ID */
     private String userId;
@@ -37,10 +37,13 @@ public class Notification implements Serializable {
     private String content;
 
     /** 是否已读 */
-    private Boolean isRead;
+    private Boolean isRead = false;
 
-    /** 关联业务ID */
-    private String relatedId;
+    /** 关联订单ID */
+    private Integer relatedOrderId;
+
+    /** 关联图书ID */
+    private String relatedBookId;
 
     /** 创建时间 */
     private LocalDateTime createdAt;

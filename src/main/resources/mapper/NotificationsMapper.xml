@@ -2,6 +2,13 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.tlais.yutest1.mapper.NotificationsMapper">
+    <insert id="insertBatch">
+        insert into notifications (user_id, type, related_order_id, content, created_at, is_read,title)
+        values
+        <foreach collection="notifications" item="item"  separator="," >
+            (#{item.userId}, #{item.type}, #{item.relatedOrderId}, #{item.content}, #{item.createdAt}, 0,#{item.title})
+        </foreach>
+    </insert>
     <update id="updateNotifications">
         update notifications set is_read = 1 where is_read = 0
         <if test="ids != null ">

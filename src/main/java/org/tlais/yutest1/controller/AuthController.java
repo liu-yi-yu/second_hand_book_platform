@@ -30,6 +30,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public Result<UserVO> register(@RequestBody UserDTO userDTO) {
+        //TODO : 尽量在最后可以弄一个通过邮箱发送的验证码
         User register = userService.register(userDTO);
 
         //登录成功后，生成jwt令牌

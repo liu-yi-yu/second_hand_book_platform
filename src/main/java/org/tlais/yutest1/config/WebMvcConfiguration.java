@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.tlais.yutest1.interceptor.AdminCheckInterceptor;
 import org.tlais.yutest1.interceptor.JwtTokenUserInterceptor;
 
 /**
@@ -18,6 +19,8 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 
     @Autowired
     private JwtTokenUserInterceptor jwtTokenUserInterceptor;
+    @Autowired
+    private AdminCheckInterceptor adminCheckInterceptor;
 
     /**
      * 注册自定义拦截器
@@ -30,6 +33,10 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
                 .excludePathPatterns("/api/auth/register")
                 .excludePathPatterns("/api/auth/login")
                 .excludePathPatterns("/doc.html", "/swagger-ui/**");
+
+        //new 出来的实例不受 Spring 管理
+        registry.addInterceptor(adminCheckInterceptor)
+                .addPathPatterns("/api/admin/**");
     }
 
     /**

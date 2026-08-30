@@ -10,16 +10,14 @@ import org.tlais.yutest1.constant.*;
 import org.tlais.yutest1.context.BaseContext;
 import org.tlais.yutest1.domain.dto.OrderCreatesDTO;
 import org.tlais.yutest1.domain.dto.OrderSearchDTO;
-import org.tlais.yutest1.domain.entity.Book;
-import org.tlais.yutest1.domain.entity.Order;
-import org.tlais.yutest1.domain.entity.OrdersRole;
-import org.tlais.yutest1.domain.entity.User;
+import org.tlais.yutest1.domain.entity.*;
 import org.tlais.yutest1.domain.vo.*;
 import org.tlais.yutest1.mapper.*;
 import org.tlais.yutest1.service.OrdersService;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 @Service
@@ -37,29 +35,35 @@ public class OrdersServiceImpl implements OrdersService {
     private BookImageMapper bookImageMapper;
     @Autowired
     private ImageMapper imageMapper;
+    @Autowired
+    private NotificationsMapper notificationsMapper;
 
 
     @Override
     @Transactional
     public List<OrderVO> createOrder(OrderCreatesDTO orderCreatesDTO) {
-        //TODO 一本书同时被多人下单：使用**乐观锁**策略——下单时检查书籍状态和版本号，防止超卖。
+        // 一本书同时被多人下单：使用**乐观锁**策略——下单时检查书籍状态和版本号，防止超卖。
         ArrayList<String> bookIds = orderCreatesDTO.getBookIds();
         List<Book> books = bookMapper.selectByIds(bookIds);
         if (books == null || books.isEmpty()) {
-            log.error("创建订单失败，书籍不存在");
+            log.error(OrderException.BOOK_NOT_EXIST);
             return null;
         }
 
         List<OrderVO> orders = new ArrayList<>();
         List<Order> orderList = new ArrayList<>();
+        List<Notification> notifications = new ArrayList<>();
         UserSimpleVO buyer = new UserSimpleVO();
         String currentId = BaseContext.getCurrentId();
         user(currentId, buyer);
         LocalDateTime now = LocalDateTime.now();
-        for (Book book : books) {
+
+        Iterator<Book> it = books.iterator();
+        while (it.hasNext()) {
+            Book book = it.next();
             if (!book.getStatus().equals(BookStatu.SELLING)) {
-                log.error("创建订单失败，书籍状态异常");
                 bookIds.remove(book.getId());
+                it.remove();          // 安全删除
                 continue;
             }
             book.setUpdatedAt(now);
@@ -89,17 +93,29 @@ public class OrdersServiceImpl implements OrdersService {
 
             orderList.add(order);
             orders.add(orderVO);
+
+            // 插入通知,给卖家
+            Notification notification = new Notification();
+            createNotification(order.getId(), notification, book.getSellerId(),NotificationsType.ORDER_CREATED,NotificationsContent.ORDER_CREATED,NotificationsContent.ORDER_CREATED);
+            notifications.add(notification);
         }
         // 更新书籍状态为已售
-        bookMapper.updateByIds(books, now);
+        Integer rows = bookMapper.updateByIds(books, now);
+        if(rows!=books.size()){
+            log.error(OrderException.BOOK_VERSION_ERROR);
+            return null;
+        }
         // 插入订单
         ordersMapper.insertBatch(orderList);
+        // 插入通知,给卖家
+        notificationsMapper.insertBatch(notifications);
         // 清空购物车
         cartMapper.deleteBatch(bookIds);
         return orders;
     }
 
     @Override
+    @Transactional
     public OrderVO upStatus(Integer orderId,String orderStatus,String reason) {
         Order order = ordersMapper.selectById(orderId);
         if (order == null ) {
@@ -121,10 +137,11 @@ public class OrdersServiceImpl implements OrdersService {
             return null;
         }
 
+        Notification notification = new Notification();
         switch (orderStatus) {
             // 确认订单
             case OrderStatu.CONFIRMED ->{
-                //TODO  卖家如果在 48 小时内未确认，订单自动取消，书籍恢复 `selling` 状态
+                //  卖家如果在 48 小时内未确认，订单自动取消，书籍恢复 `selling` 状态
                 if(!sellerId.equals(currentId)){
                     log.error(OrderException.SELLER_DIFFERENT);
                     return null;
@@ -134,10 +151,12 @@ public class OrdersServiceImpl implements OrdersService {
                     return null;
                 }
                 order.setConfirmedAt(LocalDateTime.now());
+                // 插入通知,给买家
+                createNotification(orderId, notification, buyerId,NotificationsType.ORDER_CONFIRMED,NotificationsContent.ORDER_CONFIRMED,NotificationsContent.ORDER_CONFIRMED);
             }
             // 发货
             case OrderStatu.SHIPPED ->{
-                //TODO  卖家如果在确认后 72 小时内未发货，订单自动取消
+                // 卖家如果在确认后 72 小时内未发货，订单自动取消
                 if(!sellerId.equals(currentId)){
                     log.error(OrderException.SELLER_DIFFERENT);
                     return null;
@@ -147,10 +166,12 @@ public class OrdersServiceImpl implements OrdersService {
                     return null;
                 }
                 order.setShippedAt(LocalDateTime.now());
+                // 插入通知,给买家
+                createNotification(orderId, notification, buyerId,NotificationsType.ORDER_SHIPPED,NotificationsContent.ORDER_SHIPPED,NotificationsContent.ORDER_SHIPPED);
             }
             // 收货
             case OrderStatu.RECEIVED ->{
-                //TODO  收货后 24 小时自动变为 `completed`（给买家留检查书籍的时间）
+                //  收货后 24 小时自动变为 `completed`（给买家留检查书籍的时间）
                 if(!buyerId.equals(currentId)){
                     log.error(OrderException.BUYER_DIFFERENT);
                     return null;
@@ -160,10 +181,15 @@ public class OrdersServiceImpl implements OrdersService {
                     return null;
                 }
                 order.setReceivedAt(LocalDateTime.now());
+                // 插入通知,给买家
+                createNotification(orderId, notification, buyerId,NotificationsType.ORDER_RECEIVED,NotificationsContent.ORDER_RECEIVED,NotificationsContent.ORDER_RECEIVED);
+                // 插入通知,给卖家
+                createNotification(orderId, notification, sellerId,NotificationsType.ORDER_RECEIVED,NotificationsContent.ORDER_RECEIVED,NotificationsContent.ORDER_RECEIVED);
             }
             // 取消订单
             case OrderStatu.CANCELLED ->{
-                //TODO  频繁取消的用户将扣除信誉分（见 3.10）
+                //  频繁取消的用户将扣除信誉分（见 3.10）
+                //TODO 取消后需要退钱
                 if(!status.equals(OrderStatu.PENDING) &&!(status.equals(OrderStatu.COMPLETED)&&buyerId.equals(currentId))){
                     log.error(OrderException.ORDER_STATUS_EXCEPTION);
                     return null;
@@ -173,8 +199,13 @@ public class OrdersServiceImpl implements OrdersService {
                 Book book = bookMapper.selectById(order.getBookId());
                 book.setStatus(BookStatu.SELLING);
                 bookMapper.updateById(book);
+                // 插入通知,给买家
+                createNotification(orderId, notification, buyerId,NotificationsType.ORDER_CANCELLED,NotificationsContent.ORDER_CANCELLED,NotificationsContent.ORDER_CANCELLED);
+                // 插入通知,给卖家
+                createNotification(orderId, notification, sellerId,NotificationsType.ORDER_CANCELLED,NotificationsContent.ORDER_CANCELLED,NotificationsContent.ORDER_CANCELLED);
             }
         }
+
         order.setStatus(orderStatus);
         ordersMapper.updateById(order);
 
@@ -183,6 +214,16 @@ public class OrdersServiceImpl implements OrdersService {
 
         return orderVO;
 
+    }
+
+    private void createNotification(Integer orderId, Notification notification, String buyerId,String type,String title,String content) {
+        notification.setUserId(buyerId);
+        notification.setRelatedOrderId(orderId);
+        notification.setType(type);
+        notification.setTitle(title);
+        notification.setContent(content);
+        notification.setCreatedAt(LocalDateTime.now());
+        notificationsMapper.insert(notification);
     }
 
     private boolean orderVOGet(Order order, OrderVO orderVO) {

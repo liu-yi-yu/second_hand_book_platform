@@ -6,7 +6,16 @@
         select * from messages where order_id = #{orderId}
     </select>
     <select id="selectUnread" resultType="org.tlais.yutest1.domain.entity.Message">
-        select * from messages where  is_read = 0 and (receiver_id = #{currentId} or sender_id = #{currentId})
+        select * from messages where  is_read = 0 and receiver_id = #{currentId}
         order by order_id desc
     </select>
+
+    <!--
+        新增：保存一条消息
+        注意：id 是数据库自增主键(bigint)，所以这里不插入 id 字段，让数据库自动生成
+    -->
+    <insert id="insert" parameterType="org.tlais.yutest1.domain.entity.Message">
+        insert into messages (order_id, sender_id, receiver_id, content, client_id, created_at)
+        values (#{orderId}, #{senderId}, #{receiverId}, #{content}, #{clientId}, #{createdAt})
+    </insert>
 </mapper>

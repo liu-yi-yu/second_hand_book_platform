@@ -4,12 +4,12 @@ import com.github.pagehelper.PageHelper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.tlais.yutest1.constant.OrderException;
-import org.tlais.yutest1.constant.OrderStatu;
-import org.tlais.yutest1.constant.ReviewException;
+import org.springframework.transaction.annotation.Transactional;
+import org.tlais.yutest1.constant.*;
 import org.tlais.yutest1.context.BaseContext;
 import org.tlais.yutest1.domain.dto.PageDTO;
 import org.tlais.yutest1.domain.dto.ReviewCreateDTO;
+import org.tlais.yutest1.domain.entity.Notification;
 import org.tlais.yutest1.domain.entity.Order;
 import org.tlais.yutest1.domain.entity.Review;
 import org.tlais.yutest1.domain.entity.User;
@@ -18,6 +18,7 @@ import org.tlais.yutest1.domain.vo.PageVO;
 import org.tlais.yutest1.domain.vo.ReviewVO;
 import org.tlais.yutest1.domain.vo.UserSimpleVO;
 import org.tlais.yutest1.enumeration.OrderStatus;
+import org.tlais.yutest1.mapper.NotificationsMapper;
 import org.tlais.yutest1.mapper.OrdersMapper;
 import org.tlais.yutest1.mapper.ReviewMapper;
 import org.tlais.yutest1.mapper.UserMapper;
@@ -37,10 +38,13 @@ public class ReviewServiceImpl implements ReviewService {
     private OrdersMapper ordersMapper;
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private NotificationsMapper notificationsMapper;
 
     private Integer reviewTotal = 0;
 
     @Override
+    @Transactional
     public Review createReview(ReviewCreateDTO reviewCreateDTO) {
         Order order = ordersMapper.selectById(reviewCreateDTO.getOrderId());
         if(order == null){
@@ -57,6 +61,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         String targetUserId ;
         if(order.getSellerId().equals(reviewerId)){
+            // 卖家评价买家
             targetUserId = order.getBuyerId();
         }else{
             targetUserId = order.getSellerId();
@@ -71,8 +76,18 @@ public class ReviewServiceImpl implements ReviewService {
         LocalDateTime now = LocalDateTime.now();
         review.setCreatedAt(now);
 
-
         reviewMapper.insert(review);
+
+        //评价增加
+        Notification notification = Notification.builder()
+                .relatedOrderId(order.getId())
+                .userId(targetUserId)
+                .type(NotificationsType.REVIEW_RECEIVED)
+                .title(NotificationsContent.REVIEW_RECEIVED)
+                .createdAt(now)
+                .build();
+        notificationsMapper.insert(notification);
+
         return review;
     }
 

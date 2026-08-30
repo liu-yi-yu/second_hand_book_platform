@@ -1,21 +1,20 @@
 package org.tlais.yutest1.service.Impl;
 
 import com.github.pagehelper.PageHelper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.tlais.yutest1.constant.OrderException;
-import org.tlais.yutest1.constant.SortBy;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.tlais.yutest1.constant.*;
 import org.tlais.yutest1.context.BaseContext;
+import org.tlais.yutest1.domain.dto.MessageCreateDTO;
 import org.tlais.yutest1.domain.entity.*;
 import org.tlais.yutest1.domain.vo.MessageVO;
 import org.tlais.yutest1.domain.vo.UnreadMessagesVO;
-import org.tlais.yutest1.mapper.BookMapper;
-import org.tlais.yutest1.mapper.MessagesMapper;
-import org.tlais.yutest1.mapper.OrdersMapper;
-import org.tlais.yutest1.mapper.UserMapper;
+import org.tlais.yutest1.mapper.*;
 import org.tlais.yutest1.service.MessagesService;
 
-import org.springframework.stereotype.Service;
-
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Service
+@Slf4j
 public class MessagesServiceImpl implements MessagesService {
     @Autowired
     private MessagesMapper messagesMapper;
@@ -32,10 +32,22 @@ public class MessagesServiceImpl implements MessagesService {
     private BookMapper bookMapper;
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private NotificationsMapper notificationsMapper;
 
     @Override
     public MessageVO getMessages(Integer orderId, Integer limit) {
-        int max = messagesMapper.fillMax();
+        Order order = ordersMapper.selectById(orderId);
+        if(order == null){
+            throw new IllegalArgumentException(OrderException.ORDER_NOT_EXIST);
+        }
+        if(!order.getSellerId().equals(BaseContext.getCurrentId())&&!order.getBuyerId().equals(BaseContext.getCurrentId())) {
+            throw new IllegalArgumentException(OrderException.USER_NOT_SLLER_OR_BUYER);
+        }
+        int max = messagesMapper.fillMax(orderId);
+        if(max == 0){
+            return null;
+        }
         PageHelper.startPage(max, limit, SortBy.CREATE_TIME_DESC);
         List<Message> messages = messagesMapper.selectByOrderId(orderId);
 
@@ -63,7 +75,11 @@ public class MessagesServiceImpl implements MessagesService {
             }
             else{
                 map.put(message.getOrderId(),1L);
-                mapMessage.put(message.getOrderId(),message.getContent().substring(0,50));
+                String content = message.getContent();
+                if(content.length()>50) {
+                    content = content.substring(0,50);
+                }
+                mapMessage.put(message.getOrderId(), content);
             }
             count.getAndSet(count.get() + 1);
             orderIds.add(message.getOrderId());
@@ -106,5 +122,78 @@ public class MessagesServiceImpl implements MessagesService {
         }
 
         messagesMapper.updateRead(orderId);
+    }
+
+    /**
+     * 发送一条聊天消息（由 WebSocket 端点调用，不走 HTTP 接口）
+     *
+     * 整体流程：校验权限 → 去重 → 落库 → 重新查询拿到自增 id
+     *
+     * @param senderId 发送者用户ID（WebSocket 连接时从 token 解析得到）
+     * @param dto      消息内容（orderId + content + clientId）
+     * @return 落库后的完整消息对象（含数据库自增的 id）
+     */
+    @Override
+    @Transactional
+    public Message sendMessage(String senderId, MessageCreateDTO dto) {
+        // 1. 查出订单，判断订单是否存在
+        Order order = ordersMapper.selectById(dto.getOrderId());
+        if (order == null) {
+            throw new IllegalArgumentException(OrderException.ORDER_NOT_EXIST);
+        }
+
+        // 2. 校验发送者必须是这个订单的买家或卖家（防止无关的人乱发消息）
+        String buyerId = order.getBuyerId();
+        String sellerId = order.getSellerId();
+        if (!senderId.equals(buyerId) && !senderId.equals(sellerId)) {
+            throw new IllegalArgumentException(OrderException.USER_NOT_SLLER_OR_BUYER);
+        }
+
+        // 3. 订单已完成或已取消后，不能再发消息（房间只读）
+        if (OrderStatu.COMPLETED.equals(order.getStatus()) || OrderStatu.CANCELLED.equals(order.getStatus())) {
+            throw new IllegalArgumentException("订单已完成或已取消，不能发送消息");
+        }
+
+        // 4. 去重：同一个 clientId 只允许落库一次（网络重试会产生重复消息）
+        if (messagesMapper.countByClientId(dto.getClientId()) > 0) {
+            log.warn("消息重复，直接返回已存在的消息。clientId={}", dto.getClientId());
+            return messagesMapper.selectByClientId(dto.getClientId());
+        }
+
+        // 5. 确定接收者：我是买家就发给卖家，反之亦然
+        String receiverId = senderId.equals(buyerId) ? sellerId : buyerId;
+
+        LocalDateTime now = LocalDateTime.now();
+        //查找通知
+        LocalDateTime maxTime = notificationsMapper.getMaxTime(order.getId(),receiverId);
+        if(maxTime == null||maxTime.isBefore(now.minusMinutes(5))){
+            // 5分钟内没有评价
+            // 收到新消息（聚合：5 分钟内同一订单只发一条）
+            Notification notification = Notification.builder()
+                    .relatedOrderId(order.getId())
+                    .userId(receiverId)
+                    .type(NotificationsType.NEW_MESSAGE)
+                    .title(NotificationsContent.NEW_MESSAGE)
+                    .createdAt(now)
+                    .build();
+            notificationsMapper.insert(notification);
+        }
+
+        // 6. 组装消息对象并落库（id 是数据库自增主键，这里不手动指定）
+
+        Message message = Message.builder()
+                .orderId(dto.getOrderId())
+                .senderId(senderId)
+                .receiverId(receiverId)
+                .content(dto.getContent())
+                .clientId(dto.getClientId())
+                .createdAt(now)
+                .build();
+        messagesMapper.insert(message);
+
+        // 7. 重新查询一次，拿到数据库自增生成的 id（Message.id 是 String，直接自增回填可能类型不匹配，所以用查询拿）
+        Message saved = messagesMapper.selectByClientId(dto.getClientId());
+        log.info("消息发送成功，messageId={}, orderId={}", saved != null ? saved.getId() : null, dto.getOrderId());
+        return saved;
     }
 }

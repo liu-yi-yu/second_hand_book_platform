@@ -18,6 +18,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MessageCreateDTO implements Serializable {
 
+    /** 消息所属的订单ID */
+    private Integer orderId;
+
     /** 消息内容 */
     @NotBlank(message = "消息内容不能为空")
     private String content;
