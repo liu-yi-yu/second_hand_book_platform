@@ -6,6 +6,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.tlais.yutest1.domain.entity.Result;
 import org.tlais.yutest1.exception.BusinessException;
 import org.tlais.yutest1.util.ResultGenerator;
@@ -51,4 +52,16 @@ public class GlobalExceptionHandler {
         log.error("系统异常", e);
         return ResultGenerator.genFailResult("系统异常，请联系管理员");
     }
+
+    /**
+     * 404 异常 → 返回给前端显示
+     * 效果：无效请求返回 404，不再输出长长的 ERROR 堆栈日志。
+     */
+    @ResponseBody
+    @ExceptionHandler(NoResourceFoundException.class)
+    public Result handleNoResourceFound(NoResourceFoundException e){
+        // 404，不打印error堆栈，直接返回404，避免日志污染
+        return ResultGenerator.genFailResult("接口不存在");
+    }
+
 }

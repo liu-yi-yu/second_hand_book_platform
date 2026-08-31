@@ -54,7 +54,7 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
         String userId = jwtProperties.getUserIdByToken(token);
         BaseContext.setCurrentId(userId);
         request.setAttribute("loginUserId", userId);
-        log.info("当前用户ID:{}",BaseContext.getCurrentId());
+        //log.info("当前用户ID:{}",BaseContext.getCurrentId());
         return true;
     }
 

@@ -12,7 +12,7 @@ import org.tlais.yutest1.properties.JwtProperties;
 @SpringBootApplication
 @EnableAspectJAutoProxy
 @EnableTransactionManagement
-@EnableConfigurationProperties(JwtProperties.class)
+//@EnableConfigurationProperties(JwtProperties.class)
 @EnableCaching//开启缓存功能
 @EnableScheduling//开启定时任务功能
 public class YuTest1Application {

@@ -76,7 +76,7 @@ public class JwtProperties {
                     .setSigningKey(secretKey)
                     .build()
                     .parseClaimsJws(token);
-            log.info("token校验:{}",token);
+            //log.info("token校验:{}",token);
             return true;
         } catch (ExpiredJwtException e) {
             // token过期

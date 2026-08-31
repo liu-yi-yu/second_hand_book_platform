@@ -31,7 +31,7 @@
                 seller_id = #{sellerId}
             </if>
             <if test="buyerId != null">
-                buyer_id = #{buyerId}
+                and buyer_id = #{buyerId}
             </if>
             <if test="status != null">
                 and
@@ -48,7 +48,7 @@
                 status = #{status}
             </if>
             <if test="now != null">
-                created_at >= #{now}
+                and created_at >= #{now}
             </if>
         </where>
     </select>
@@ -59,10 +59,11 @@
                 status = #{status}
             </if>
             <if test="now != null">
-                created_at >= #{now}
+                and created_at >= #{now}
             </if>
         </where>
-        group by created_at order by created_at desc
+        group by DATE(created_at)
+        order by DATE(created_at) desc
     </select>
     <select id="selectByIdList" resultType="org.tlais.yutest1.domain.entity.Order">
         <if test="orderIds != null and orderIds.size() > 0">
