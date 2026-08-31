@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  index.html —— 整个前端程序的"壳"（SPA 入口）
+  ============================================================================
+  小白理解：
+  1. 这是我们项目的唯一一个 HTML 页面。整个网站的所有"页面"（首页、详情页、
+     聊天页……）其实都是靠 JS 往 <div id="app"> 里"画"不同的内容实现的，
+     这种做法叫 单页应用（SPA，Single Page Application）。
+  2. 页面切换靠 URL 里 # 后面的部分（叫 hash），例如：
+        http://localhost:8081/#/            → 首页
+        http://localhost:8081/#/login       → 登录页
+        http://localhost:8081/#/orders/3    → 3 号订单的详情+聊天页
+     hash 变化不会刷新整页，由 js/router.js 监听并切换内容。
+  3. 本文件不做任何业务逻辑，只负责：
+     - 引入全局样式 css/app.css
+     - 摆好几个"容器"：导航栏、页面主体 #app、toast 提示区、弹窗区
+     - 用 <script type="module"> 启动 js/app.js（整个程序的入口）
+  ============================================================================
+-->
+<html lang="zh-CN">
+<head>
+  <!-- 声明字符编码为 UTF-8，保证中文不乱码 -->
+  <meta charset="UTF-8" />
+  <!-- 让手机上也能正常缩放显示（响应式） -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>校园二手书交易平台</title>
+  <!-- favicon：一个小图标，直接用内联 SVG（书本图案），不用额外文件 -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E" />
+  <!-- 全局样式表 -->
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+
+  <!-- ====================== 顶部导航栏 ======================
+       内容由 js/ui.js 里的 renderNavbar() 根据"是否登录 / 当前页面"动态生成。
+       data-nav 属性是给 JS 用的标记，点击事件统一在 ui.js 里处理。 -->
+  <header id="navbar" class="navbar"><!-- JS 渲染 --></header>
+
+  <!-- ====================== 页面主体 ======================
+       每次路由切换，router.js 都会把对应视图渲染进这个容器 -->
+  <main id="app" class="app-main"><!-- 视图渲染区 --></main>
+
+  <!-- ====================== 全局提示（toast）容器 ======================
+       api.js / ui.js 弹出的"操作成功""网络错误"等小提示会堆叠在这里 -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ====================== 全局弹窗（modal）容器 ======================
+       确认框、评价打分框等临时弹窗会渲染在这里 -->
+  <div id="modal-container"></div>
+
+  <!--
+    程序入口。
+    type="module" 表示这是 ES 模块，可以使用 import/export 语法；
+    defer 的效果是等 HTML 解析完再执行（module 默认就是如此）。
+  -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
