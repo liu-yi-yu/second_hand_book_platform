@@ -1,0 +1,434 @@
+/* ============================================================================
+   app.css —— 全站样式表
+   ============================================================================
+   小白理解：
+   1. 这里定义了整个前端的外观。开头有一段“设计变量”（CSS 变量），
+      集中管理主色、圆角、阴影等，想换主题色只要改 :root 里的变量即可。
+   2. 命名采用 BEM 风格的简单前缀：
+        .btn-xxx   按钮        .card      卡片       .form-xxx  表单
+        .badge-xxx 状态徽章    .chat-xxx  聊天气泡   .modal     弹窗
+   3. 所有样式都写在这一份文件里，页面之间共用，避免重复。
+   ========================================================================== */
+
+/* ---------------- 1. 全局设计变量与重置 ---------------- */
+:root {
+  /* 主色（品牌色）与辅助色 */
+  --primary: #4f46e5;          /* 靛蓝色：主按钮、链接、选中态 */
+  --primary-dark: #4338ca;
+  --primary-light: #eef2ff;
+  --danger: #dc2626;           /* 危险操作（删除/禁用） */
+  --success: #16a34a;          /* 成功/在售 */
+  --warning: #d97706;          /* 警告 */
+  --star: #f59e0b;             /* 评分星星的颜色 */
+
+  /* 中性色 */
+  --text: #1f2937;             /* 主文字 */
+  --text-light: #6b7280;       /* 次要文字 */
+  --border: #e5e7eb;           /* 边框 */
+  --bg: #f3f4f6;               /* 页面背景 */
+  --card-bg: #ffffff;          /* 卡片背景 */
+
+  /* 圆角与阴影：统一风格用 */
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg: 0 10px 25px rgba(0,0,0,.12);
+}
+
+/* 通配符重置：去掉浏览器默认的边距，统一按 border 计算宽度 */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+               "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---------------- 2. 顶部导航栏 ---------------- */
+.navbar {
+  position: sticky;                 /* 吸顶：往下滚动时导航栏固定在顶部 */
+  top: 0; z-index: 100;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.navbar-inner {
+  max-width: 1100px; margin: 0 auto; padding: 0 16px;
+  height: 56px;
+  display: flex; align-items: center; gap: 20px;
+}
+.nav-logo {
+  font-size: 17px; font-weight: 700; color: var(--primary);
+  display: flex; align-items: center; gap: 6px; cursor: pointer;
+  white-space: nowrap;
+}
+.nav-links { display: flex; align-items: center; gap: 4px; flex: 1; }
+.nav-link {
+  padding: 6px 12px; border-radius: 8px;
+  color: var(--text); cursor: pointer; position: relative;
+  display: flex; align-items: center; gap: 4px; white-space: nowrap;
+}
+.nav-link:hover { background: var(--bg); text-decoration: none; }
+.nav-link.active { color: var(--primary); background: var(--primary-light); font-weight: 600; }
+
+/* 导航项上的红色数字徽标（未读通知数/未读聊天数） */
+.nav-badge {
+  position: absolute; top: -2px; right: -2px;
+  background: var(--danger); color: #fff;
+  font-size: 11px; line-height: 1; padding: 3px 5px;
+  border-radius: 99px; min-width: 16px; text-align: center;
+}
+.nav-user { display: flex; align-items: center; gap: 10px; }
+.nav-username { font-weight: 600; cursor: pointer; }
+
+/* ---------------- 3. 页面主体布局 ---------------- */
+.app-main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 60px; }
+.page-title { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+.page-sub { color: var(--text-light); margin: -12px 0 16px; font-size: 13px; }
+
+/* ---------------- 4. 卡片 ---------------- */
+.card {
+  background: var(--card-bg); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px;
+}
+.card-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+
+/* ---------------- 5. 按钮 ---------------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 8px 16px; border-radius: 8px; border: 1px solid transparent;
+  font-size: 14px; cursor: pointer; transition: .15s; user-select: none;
+  background: var(--bg); color: var(--text);
+}
+.btn:hover { opacity: .9; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-dark); opacity: 1; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-outline { background: #fff; border-color: var(--border); }
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+.btn-sm { padding: 4px 10px; font-size: 13px; border-radius: 6px; }
+.btn-lg { padding: 11px 22px; font-size: 15px; }
+.btn-block { width: 100%; }
+.btn-link { background: none; color: var(--primary); padding: 4px; }
+
+/* 一排操作按钮的间距 */
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* ---------------- 6. 表单 ---------------- */
+.form-item { margin-bottom: 14px; }
+.form-label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 13px; }
+.form-label .required { color: var(--danger); margin-left: 2px; }  /* 必填星号 */
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 9px 12px; font-size: 14px;
+  border: 1px solid var(--border); border-radius: 8px; outline: none;
+  background: #fff; color: var(--text); font-family: inherit;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+}
+.form-textarea { resize: vertical; min-height: 90px; }
+.form-help { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+.form-row { display: flex; gap: 12px; }
+.form-row > * { flex: 1; }
+
+/* 警告提示条（例如“编辑资料有风险”） */
+.alert {
+  padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px;
+  border: 1px solid;
+}
+.alert-warning { background: #fffbeb; border-color: #fcd34d; color: #92400e; }
+.alert-info { background: var(--primary-light); border-color: #c7d2fe; color: #3730a3; }
+.alert-danger { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+
+/* ---------------- 7. 登录/注册页 ---------------- */
+.auth-wrap {
+  max-width: 400px; margin: 48px auto;
+}
+.auth-card { background: #fff; border-radius: 14px; box-shadow: var(--shadow-lg); padding: 32px; }
+.auth-title { text-align: center; font-size: 22px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+.auth-sub { text-align: center; color: var(--text-light); font-size: 13px; margin-bottom: 22px; }
+.auth-switch { text-align: center; margin-top: 16px; font-size: 13px; color: var(--text-light); }
+
+/* ---------------- 8. 首页：筛选栏 + 书籍卡片网格 ---------------- */
+.filter-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+.filter-bar .form-input, .filter-bar .form-select { width: auto; }
+.filter-bar .form-input[type="text"] { width: 240px; }
+.filter-price { display: flex; align-items: center; gap: 4px; }
+.filter-price .form-input { width: 90px; }
+
+.book-grid {
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+.book-card {
+  background: #fff; border-radius: var(--radius); overflow: hidden;
+  box-shadow: var(--shadow); cursor: pointer; transition: .18s;
+  display: flex; flex-direction: column;
+}
+.book-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.book-card .cover {
+  width: 100%; aspect-ratio: 3/4; object-fit: cover; background: var(--bg);
+  display: block;
+}
+.book-card .info { padding: 10px 12px 12px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.book-card .title {
+  font-weight: 600; font-size: 14px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; min-height: 42px;
+}
+.book-card .author { color: var(--text-light); font-size: 12px; }
+.book-card .price-row { display: flex; align-items: baseline; gap: 8px; margin-top: auto; }
+.book-card .price { color: var(--danger); font-weight: 800; font-size: 17px; }
+.book-card .price-original { color: var(--text-light); font-size: 12px; text-decoration: line-through; }
+.book-card .meta { display: flex; justify-content: space-between; color: var(--text-light); font-size: 12px; }
+
+/* 价格前的货币符号小一号 */
+.price-symbol { font-size: 12px; font-weight: 600; }
+
+/* ---------------- 9. 书籍详情页 ---------------- */
+.detail-layout { display: grid; grid-template-columns: 380px 1fr; gap: 20px; }
+@media (max-width: 800px) { .detail-layout { grid-template-columns: 1fr; } }
+.detail-main-img {
+  width: 100%; aspect-ratio: 3/4; object-fit: cover;
+  border-radius: var(--radius); background: var(--bg); box-shadow: var(--shadow);
+}
+.detail-thumbs { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.detail-thumbs img {
+  width: 56px; height: 72px; object-fit: cover; border-radius: 6px;
+  cursor: pointer; border: 2px solid transparent; background: var(--bg);
+}
+.detail-thumbs img.active { border-color: var(--primary); }
+.detail-price { font-size: 26px; color: var(--danger); font-weight: 800; }
+.detail-price .price-symbol { font-size: 15px; }
+.kv-list { display: grid; grid-template-columns: 80px 1fr; row-gap: 8px; font-size: 13px; }
+.kv-list .k { color: var(--text-light); }
+.seller-card {
+  display: flex; align-items: center; gap: 10px; padding: 12px;
+  border: 1px solid var(--border); border-radius: 10px; cursor: pointer;
+}
+.seller-card:hover { border-color: var(--primary); }
+.desc-text { white-space: pre-wrap; color: var(--text); font-size: 14px; }
+
+/* ---------------- 10. 头像 ---------------- */
+.avatar {
+  border-radius: 50%; object-fit: cover; background: var(--primary-light);
+  color: var(--primary); display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700; overflow: hidden; flex-shrink: 0;
+  position: relative;   /* 让头像里的 <img> 能用 absolute 铺满整个圆 */
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-sm { width: 28px; height: 28px; font-size: 13px; }
+.avatar-md { width: 40px; height: 40px; font-size: 16px; }
+.avatar-lg { width: 72px; height: 72px; font-size: 28px; }
+
+/* ---------------- 11. 状态徽章 ---------------- */
+.badge {
+  display: inline-block; padding: 2px 10px; border-radius: 99px;
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+.badge-gray  { background: var(--bg); color: var(--text-light); }
+.badge-green { background: #dcfce7; color: var(--success); }
+.badge-blue  { background: var(--primary-light); color: var(--primary); }
+.badge-orange{ background: #ffedd5; color: var(--warning); }
+.badge-red   { background: #fee2e2; color: var(--danger); }
+.badge-purple{ background: #f3e8ff; color: #7e22ce; }
+
+/* ---------------- 12. 表格（订单列表 / 管理后台） ---------------- */
+.table-wrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th, .table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+.table th { color: var(--text-light); font-weight: 600; background: #fafafa; white-space: nowrap; }
+.table tr:hover td { background: #fafafa; }
+.table .book-cell { display: flex; align-items: center; gap: 10px; }
+.table .book-cell img { width: 36px; height: 48px; object-fit: cover; border-radius: 4px; background: var(--bg); }
+.table .book-cell .t { font-weight: 600; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------------- 13. 购物车 ---------------- */
+.cart-item {
+  display: flex; align-items: center; gap: 14px; padding: 14px;
+  background: #fff; border-radius: var(--radius); box-shadow: var(--shadow);
+  margin-bottom: 10px;
+}
+.cart-item img { width: 52px; height: 68px; object-fit: cover; border-radius: 6px; background: var(--bg); }
+.cart-item .info { flex: 1; }
+.cart-item .title { font-weight: 600; cursor: pointer; }
+.cart-item .title:hover { color: var(--primary); }
+.cart-item .price { color: var(--danger); font-weight: 800; font-size: 16px; }
+.cart-footer {
+  position: sticky; bottom: 12px; margin-top: 16px;
+  background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  padding: 14px 18px; display: flex; align-items: center; gap: 16px;
+}
+.cart-footer .total { flex: 1; font-size: 15px; }
+.cart-footer .total b { color: var(--danger); font-size: 22px; }
+.checkbox-lg { width: 17px; height: 17px; cursor: pointer; accent-color: var(--primary); }
+
+/* ---------------- 14. 订单详情 + 聊天 ---------------- */
+/* 订单状态步骤条：pending → confirmed → shipped → received → completed */
+.steps { display: flex; align-items: flex-start; margin: 18px 0 8px; }
+.step { flex: 1; text-align: center; position: relative; font-size: 12px; color: var(--text-light); }
+.step .dot {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--border);
+  margin: 0 auto 6px; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 12px; position: relative; z-index: 1;
+}
+/* 步骤之间的连接线 */
+.step:not(:last-child)::after {
+  content: ""; position: absolute; top: 11px; left: calc(50% + 14px);
+  width: calc(100% - 28px); height: 2px; background: var(--border);
+}
+.step.done { color: var(--success); font-weight: 600; }
+.step.done .dot { background: var(--success); }
+.step.done:not(:last-child)::after { background: var(--success); }
+.step.current .dot { background: var(--primary); box-shadow: 0 0 0 4px rgba(79,70,229,.15); }
+.step.current { color: var(--primary); font-weight: 700; }
+
+/* 聊天区域：固定高度、内部滚动 */
+.chat-box {
+  height: 420px; overflow-y: auto; background: var(--bg);
+  border-radius: var(--radius); padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.chat-row { display: flex; gap: 8px; max-width: 85%; }
+.chat-row.mine { align-self: flex-end; flex-direction: row-reverse; }
+.chat-bubble {
+  background: #fff; padding: 9px 13px; border-radius: 12px;
+  border-top-left-radius: 4px; box-shadow: var(--shadow);
+  white-space: pre-wrap; word-break: break-word; font-size: 14px;
+}
+.chat-row.mine .chat-bubble {
+  background: var(--primary); color: #fff; border-radius: 12px; border-top-right-radius: 4px;
+}
+/* “发送中”的乐观消息：半透明，等服务器 ack 后转正 */
+.chat-bubble.pending { opacity: .55; }
+.chat-time { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+.chat-row.mine .chat-time { text-align: right; }
+.chat-name { font-size: 11px; color: var(--text-light); margin-bottom: 2px; }
+.chat-input-bar { display: flex; gap: 10px; margin-top: 12px; }
+.chat-input-bar textarea { flex: 1; min-height: 44px; max-height: 120px; }
+.chat-readonly {
+  text-align: center; color: var(--text-light); background: var(--bg);
+  border-radius: 8px; padding: 12px; margin-top: 12px; font-size: 13px;
+}
+
+/* ---------------- 15. 评价（星级） ---------------- */
+.stars { color: #d1d5db; font-size: 18px; letter-spacing: 2px; }
+.stars .on { color: var(--star); }
+.star-input { font-size: 30px; cursor: pointer; letter-spacing: 6px; user-select: none; }
+.star-input span { color: #d1d5db; transition: .1s; }
+.star-input span.on { color: var(--star); }
+.star-input span:hover { transform: scale(1.15); }
+
+/* 评分分布条（用户主页“我的评价”） */
+.dist-row { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 4px; }
+.dist-bar { flex: 1; height: 8px; background: var(--bg); border-radius: 99px; overflow: hidden; }
+.dist-bar > div { height: 100%; background: var(--star); border-radius: 99px; }
+
+/* ---------------- 16. 通知列表 ---------------- */
+.noti-item {
+  display: flex; gap: 12px; padding: 14px; background: #fff;
+  border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 10px;
+  cursor: pointer; align-items: flex-start;
+}
+.noti-item:hover { box-shadow: var(--shadow-lg); }
+.noti-item.unread { border-left: 3px solid var(--primary); }
+.noti-icon {
+  width: 38px; height: 38px; border-radius: 10px; background: var(--primary-light);
+  display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+}
+.noti-item .title { font-weight: 600; }
+.noti-item .content { color: var(--text-light); font-size: 13px; }
+.noti-item .time { color: var(--text-light); font-size: 12px; margin-left: auto; white-space: nowrap; }
+.noti-item .dot-unread {
+  width: 8px; height: 8px; background: var(--danger); border-radius: 50%;
+  margin-top: 8px; flex-shrink: 0;
+}
+
+/* ---------------- 17. 管理后台 ---------------- */
+.admin-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.admin-tab {
+  padding: 8px 18px; border-radius: 8px; cursor: pointer; font-weight: 600;
+  background: #fff; border: 1px solid var(--border);
+}
+.admin-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* 看板统计卡片 */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 16px; }
+.stat-card {
+  background: #fff; border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 18px; 
+}
+.stat-card .label { color: var(--text-light); font-size: 13px; }
+.stat-card .value { font-size: 26px; font-weight: 800; margin-top: 4px; }
+.stat-card .value.money { color: var(--danger); }
+
+/* 简易柱状图（用 div 高度画柱子，不引入任何图表库） */
+.bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 140px; padding: 10px 4px 0; }
+.bar-chart .bar-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+.bar-chart .bar { width: 60%; max-width: 46px; background: var(--primary); border-radius: 6px 6px 0 0; min-height: 3px; }
+.bar-chart .bar-label { font-size: 11px; color: var(--text-light); white-space: nowrap; }
+.bar-chart .bar-value { font-size: 12px; font-weight: 700; }
+
+/* ---------------- 18. toast 提示 ---------------- */
+.toast-container {
+  position: fixed; top: 68px; left: 50%; transform: translateX(-50%);
+  z-index: 1000; display: flex; flex-direction: column; gap: 8px; align-items: center;
+  pointer-events: none;   /* 提示不挡鼠标 */
+}
+.toast {
+  padding: 10px 18px; border-radius: 10px; color: #fff; font-size: 14px;
+  box-shadow: var(--shadow-lg); animation: toast-in .25s ease;
+  max-width: 70vw;
+}
+.toast-success { background: var(--success); }
+.toast-error   { background: var(--danger); }
+.toast-info    { background: #374151; }
+.toast-warning { background: var(--warning); }
+@keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+
+/* ---------------- 19. 弹窗（modal） ---------------- */
+.modal-mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 900;
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.modal {
+  background: #fff; border-radius: 14px; box-shadow: var(--shadow-lg);
+  width: 100%; max-width: 480px; max-height: 86vh; overflow-y: auto;
+  padding: 24px; animation: toast-in .2s ease;
+}
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+/* ---------------- 20. 分页条 ---------------- */
+.pagination { display: flex; gap: 6px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+.page-btn {
+  min-width: 34px; height: 34px; padding: 0 8px; border-radius: 8px;
+  border: 1px solid var(--border); background: #fff; cursor: pointer; font-size: 13px;
+}
+.page-btn.current { background: var(--primary); color: #fff; border-color: var(--primary); }
+.page-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ---------------- 21. 空状态 / 加载中 ---------------- */
+.empty {
+  text-align: center; color: var(--text-light); padding: 48px 0;
+}
+.empty .icon { font-size: 44px; margin-bottom: 8px; }
+.loading { text-align: center; color: var(--text-light); padding: 40px 0; }
+
+/* 搜索建议下拉框（首页搜索框自动补全） */
+.suggest-box {
+  position: absolute; top: 100%; left: 0; right: 0; background: #fff;
+  border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-lg);
+  z-index: 50; overflow: hidden; margin-top: 4px;
+}
+.suggest-box .sug-item { padding: 8px 12px; cursor: pointer; font-size: 13px; }
+.suggest-box .sug-item:hover { background: var(--primary-light); }
+
+/* 相对定位锚点：给搜索建议等绝对定位元素当参照 */
+.position-relative { position: relative; }
