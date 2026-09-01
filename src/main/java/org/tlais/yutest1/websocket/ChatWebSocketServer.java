@@ -22,6 +22,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -29,18 +30,24 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * 小白理解整条链路：
  * 1. 前端通过 ws://localhost:8080/ws/chat?token=xxx 建立连接
- * 2. onOpen：校验 token，把「用户ID -> 连接」存进 sessionMap
+ * 2. onOpen：校验 token，把「用户ID -> 连接集合（多标签页共存）」存进 sessionMap
  * 3. 前端发 {type:"send_message", order_id, content, client_id}
- * 4. onMessage：交给 MessagesService 落库，然后给发送方回 message_ack、给接收方推 new_message
+ * 4. onMessage：交给 MessagesService 落库，然后给发送方回 message_ack、给接收方所有在线连接推 new_message
  */
 @Component
 @ServerEndpoint("/ws/chat")
 @Slf4j
 public class ChatWebSocketServer {
 
-    // 保存「用户ID -> WebSocket连接」的映射，方便根据用户ID找到对应连接来推送消息
+    // 保存「用户ID -> 该用户的所有 WebSocket 连接」的映射
+    // 用 Set 而不是单 Session：同一用户可能开多个标签页/多端登录，
+    // 每个连接都要能收到推送（否则后连的会把先连的顶掉）。
     // 用 ConcurrentHashMap 是因为可能有多个用户同时连接/断开（线程安全）
-    private static final Map<String, Session> sessionMap = new ConcurrentHashMap<>();
+    private static final Map<String, Set<Session>> sessionMap = new ConcurrentHashMap<>();
+
+    // 服务端空闲超时：不显式设置时内嵌 Tomcat 默认 60s 就会把没活动的连接踢掉。
+    // 前端每 30s 发一次心跳，这里放宽到 120s，避免后台标签页定时器被节流时误踢线
+    private static final long MAX_IDLE_TIMEOUT_MS = 120_000;
 
     // Jackson 工具，用来把 JSON 字符串 <-> Java 对象 互相转换
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -63,14 +70,17 @@ public class ChatWebSocketServer {
             }
             String userId = jwtProperties.getUserIdByToken(token);
 
-            // 3. 把「用户ID -> 连接」存起来，方便后续根据用户ID推送
-            sessionMap.put(userId, session);
+            // 3. 把「用户ID -> 连接集合」存起来：同一用户多个标签页共存，互不顶替
+            sessionMap.computeIfAbsent(userId, k -> ConcurrentHashMap.newKeySet()).add(session);
             // 把用户ID也存到 session 自己的属性里，这样 onMessage 时能知道这条消息是谁发的
             session.getUserProperties().put("userId", userId);
 
-            // 4. 告诉前端「连接成功」
+            // 4. 放宽空闲超时（默认 60s 会误踢），前端 30s 心跳，120s 留足余量
+            session.setMaxIdleTimeout(MAX_IDLE_TIMEOUT_MS);
+
+            // 5. 告诉前端「连接成功」
             sendText(session, "{\"type\":\"connected\"}");
-            log.info("用户 {} 已连接，当前在线人数：{}", userId, sessionMap.size());
+            log.info("用户 {} 已连接，当前在线连接数：{}", userId, sessionMap.size());
         } catch (Exception e) {
             log.error("WebSocket 连接建立失败", e);
         }
@@ -130,9 +140,10 @@ public class ChatWebSocketServer {
         ack.put("created_at", message.getCreatedAt().toString());
         sendText(session, objectMapper.writeValueAsString(ack));
 
-        // 4. 如果接收方在线，把新消息推送给对方（new_message）
-        Session receiverSession = sessionMap.get(message.getReceiverId());
-        if (receiverSession != null && receiverSession.isOpen()) {
+        // 4. 如果接收方在线，把新消息推送给对方的所有连接（new_message）
+        //    多标签页时每个连接都要收到，这样任意一个标签页都能实时弹出
+        Set<Session> receiverSessions = sessionMap.get(message.getReceiverId());
+        if (receiverSessions != null) {
             Map<String, Object> msgBody = new LinkedHashMap<>();
             msgBody.put("id", message.getId());
             msgBody.put("order_id", message.getOrderId());
@@ -151,19 +162,32 @@ public class ChatWebSocketServer {
             Map<String, Object> newMsg = new LinkedHashMap<>();
             newMsg.put("type", "new_message");
             newMsg.put("message", msgBody);
-            sendText(receiverSession, objectMapper.writeValueAsString(newMsg));
+            String payload = objectMapper.writeValueAsString(newMsg);
+
+            for (Session receiverSession : receiverSessions) {
+                if (receiverSession.isOpen()) {
+                    sendText(receiverSession, payload);
+                }
+            }
         }
     }
 
     /**
-     * 连接断开时触发：把用户从 sessionMap 里移除
+     * 连接断开时触发：只移除当前这个连接，不影响该用户的其他标签页
      */
     @OnClose
     public void onClose(Session session) {
         String userId = (String) session.getUserProperties().get("userId");
-        if (sessionMap.get(userId) == session) {
-            sessionMap.remove(userId);
-            log.info("用户 {} 已断开连接", userId);
+        if (userId != null) {
+            Set<Session> sessions = sessionMap.get(userId);
+            if (sessions != null) {
+                sessions.remove(session);
+                // 该用户所有连接都断了，才把整个键删掉
+                if (sessions.isEmpty()) {
+                    sessionMap.remove(userId);
+                }
+                log.info("用户 {} 有连接断开，剩余连接数：{}", userId, sessions.size());
+            }
         }
     }
 

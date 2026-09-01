@@ -14,16 +14,15 @@ public class MessagesController {
     private MessagesService messagesService;
 
     @GetMapping("/orders/{order_id}/messages")
-    public Result getMessages(@PathVariable("order_id") Integer order_id,Integer limit) {
-        if(limit == null||limit<=0){
-            limit = 50;
-        }
-        return Result.success(messagesService.getMessages(order_id,limit));
+    public Result getMessages(@PathVariable("order_id") Integer order_id,@RequestParam(defaultValue = "1") Integer page,Integer limit) {
+        if(limit == null||limit<=0||limit>100) limit = 50;
+        if (page == null || page < 1) page = 1;
+        return Result.success(messagesService.getMessages(order_id,page,limit));
     }
 
     @GetMapping("/messages/unread-count")
     public Result getUnreadMessagesCount(){
-        //TODO  当用户在某个订单聊天页面（或 WebSocket 连接中收到该订单的消息）时，自动标记该订单消息为已读。
+        //  当用户在某个订单聊天页面（或 WebSocket 连接中收到该订单的消息）时，自动标记该订单消息为已读。
         //- 提供单独的标记已读接口供前端调用：
         //
         //  ```

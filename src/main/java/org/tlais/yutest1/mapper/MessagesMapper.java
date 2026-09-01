@@ -17,8 +17,9 @@ public interface MessagesMapper {
 
     List<Message> selectUnread(String currentId);
 
-    @Update("update messages set is_read = 1 where order_id = #{orderId}")
-    void updateRead(Integer orderId);
+    // 标记已读：只把「我是接收方」的消息标为已读，不能把对方该读的也一起标了
+    @Update("update messages set is_read = 1 where order_id = #{orderId} and receiver_id = #{receiverId}")
+    void updateRead(Integer orderId, String receiverId);
 
     // 新增：保存一条消息（对应 resources/mapper/MessagesMapper.xml 里的 insert）
     int insert(Message message);

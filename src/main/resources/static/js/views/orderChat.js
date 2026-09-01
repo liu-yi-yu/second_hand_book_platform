@@ -10,11 +10,11 @@
  *           confirmed_at, shipped_at, received_at, completed_at, cancelled_at,
  *           created_at(可能为 null) }
  *
- *   GET /api/orders/{orderId}/messages?limit=50     拉历史消息
+ *   GET /api/orders/{orderId}/messages?page=1&limit=50   拉历史消息（分页，page=1 为最新一页）
  *       返回 { message: [消息数组], has_more: 布尔 }
  *       ⚠ 字段名就叫 message（不是 messages）！
  *       ⚠ 消息按时间【最新在前】排序 → 渲染时要 reverse 成“旧在上”。
- *       ⚠ 没有任何消息时后端返回 data=null。
+ *       ⚠ 没有任何消息时后端返回空列表（旧版可能返回 data=null，已兼容）。
  *       消息字段：{ id(字符串), order_id, sender_id, receiver_id,
  *                  content, client_id, created_at }
  *
@@ -142,25 +142,58 @@ export async function renderOrderChat(app, params) {
     return row;
   }
 
-  /* 3.1 拉历史消息 */
-  try {
-    const data = await api.get(`/api/orders/${orderId}/messages`, { limit: PAGE_LIMIT });
+  /* 3.1 拉历史消息（分页：page=1 是最新一页，可点“加载更早的消息”翻页） */
+  let page = 1;                 /* 当前已加载到第几页 */
+  let loadMoreBtn = null;       /* “加载更早的消息”按钮引用 */
+  let scrollTopBefore = 0;      /* 点击“加载更多”时的滚动位置（用于加载后保持阅读位置） */
 
-    if (data && Array.isArray(data.message) && data.message.length > 0) {
-      /* 后端最新在前 → 反转成“旧在上、新在下”再画 */
-      const ordered = [...data.message].reverse();
-      ordered.forEach(m => bubble(m, m.sender_id === myId ? 'right' : 'left'));
+  async function loadHistory() {
+    const data = await api.get(`/api/orders/${orderId}/messages`, { page, limit: PAGE_LIMIT });
 
-      /* has_more=true 说明还有更早的。⚠ 注意：后端分页参数疑似有 bug
-         （把总条数当页码传给了 PageHelper），历史消息可能拉不全，
-         这里如实提示，不影响实时消息。 */
-      if (data.has_more) {
-        chatBox.insertAdjacentHTML('afterbegin',
-          `<div style="text-align:center;color:var(--text-light);font-size:12px">— 仅显示最近 ${PAGE_LIMIT} 条 —</div>`);
+    /* 没有数据：订单无消息（首页）或已没有更早的消息（翻页） */
+    if (!data || !Array.isArray(data.message) || data.message.length === 0) {
+      if (page === 1) {
+        chatBox.innerHTML = `<div style="text-align:center;color:var(--text-light);margin:auto">还没有消息，打个招呼吧～</div>`;
       }
-    } else {
-      chatBox.innerHTML = `<div style="text-align:center;color:var(--text-light);margin:auto">还没有消息，打个招呼吧～</div>`;
+      return;
     }
+
+    /* 后端最新在前 → 反转成“旧在上、新在下”再画 */
+    const ordered = [...data.message].reverse();
+
+    if (page === 1) {
+      /* 首页：正常追加 */
+      ordered.forEach(m => bubble(m, m.sender_id === myId ? 'right' : 'left'));
+    } else {
+      /* 加载更早的一页：整批插到现有内容最前面，并保持内部顺序（anchor 固定不动） */
+      const prevScrollHeight = chatBox.scrollHeight;
+      const anchor = chatBox.firstChild;
+      ordered.forEach(m => {
+        const row = bubble(m, m.sender_id === myId ? 'right' : 'left');
+        chatBox.insertBefore(row, anchor);
+      });
+      /* bubble 默认会滚到底，这里按“新增高度”补偿回去，保持用户阅读位置 */
+      chatBox.scrollTop = scrollTopBefore + (chatBox.scrollHeight - prevScrollHeight);
+    }
+
+    /* 还有更早的消息 → 顶部显示“加载更早的消息”按钮 */
+    if (data.has_more && !loadMoreBtn) {
+      loadMoreBtn = document.createElement('div');
+      loadMoreBtn.style.cssText = 'text-align:center;padding:8px;';
+      loadMoreBtn.innerHTML = `<button class="btn btn-outline" id="load-more">加载更早的消息</button>`;
+      loadMoreBtn.querySelector('#load-more').onclick = async () => {
+        scrollTopBefore = chatBox.scrollTop;   /* 记下点击时的位置 */
+        page++;
+        loadMoreBtn.remove();
+        loadMoreBtn = null;
+        try { await loadHistory(); } catch { toast('历史消息加载失败', 'error'); }
+      };
+      chatBox.insertBefore(loadMoreBtn, chatBox.firstChild);
+    }
+  }
+
+  try {
+    await loadHistory();
   } catch {
     chatBox.innerHTML = `<div style="text-align:center;color:var(--text-light);margin:auto">历史消息加载失败</div>`;
   }

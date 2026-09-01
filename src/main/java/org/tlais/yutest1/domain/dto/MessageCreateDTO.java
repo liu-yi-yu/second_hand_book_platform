@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import jakarta.validation.constraints.NotBlank;
 
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 
 import lombok.Data;
@@ -23,6 +24,7 @@ public class MessageCreateDTO implements Serializable {
 
     /** 消息内容 */
     @NotBlank(message = "消息内容不能为空")
+    @Size(max = 255, message = "消息内容最多255个字符")
     private String content;
 
     /** 客户端唯一ID（用于去重） */

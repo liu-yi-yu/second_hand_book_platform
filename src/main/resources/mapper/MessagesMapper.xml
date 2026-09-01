@@ -5,9 +5,12 @@
     <select id="selectByOrderId" resultType="org.tlais.yutest1.domain.entity.Message">
         select * from messages where order_id = #{orderId}
     </select>
+    <!-- 未读消息：只统计「我是接收方」的消息；再加 sender_id != receiver_id，
+         排除自买订单产生的"自己发给自己"消息（防止未读数把自己发的算进去） -->
     <select id="selectUnread" resultType="org.tlais.yutest1.domain.entity.Message">
-        select * from messages where  is_read = 0 and receiver_id = #{currentId}
-        order by order_id desc
+        select * from messages where is_read = 0 and receiver_id = #{currentId}
+          and sender_id != receiver_id
+        order by created_at desc
     </select>
 
     <!--

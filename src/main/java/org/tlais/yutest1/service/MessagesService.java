@@ -9,7 +9,7 @@ import org.tlais.yutest1.domain.vo.UnreadMessagesVO;
 import java.util.List;
 
 public interface MessagesService {
-    MessageVO getMessages(Integer orderId, Integer limit);
+    MessageVO getMessages(Integer orderId, Integer page, Integer limit);
 
     UnreadMessagesVO getUnreadMessagesCount();
 

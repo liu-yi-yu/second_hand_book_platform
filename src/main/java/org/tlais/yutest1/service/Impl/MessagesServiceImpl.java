@@ -1,8 +1,10 @@
 package org.tlais.yutest1.service.Impl;
 
 import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.tlais.yutest1.constant.*;
@@ -36,7 +38,7 @@ public class MessagesServiceImpl implements MessagesService {
     private NotificationsMapper notificationsMapper;
 
     @Override
-    public MessageVO getMessages(Integer orderId, Integer limit) {
+    public MessageVO getMessages(Integer orderId, Integer page, Integer limit) {
         Order order = ordersMapper.selectById(orderId);
         if(order == null){
             throw new IllegalArgumentException(OrderException.ORDER_NOT_EXIST);
@@ -44,16 +46,14 @@ public class MessagesServiceImpl implements MessagesService {
         if(!order.getSellerId().equals(BaseContext.getCurrentId())&&!order.getBuyerId().equals(BaseContext.getCurrentId())) {
             throw new IllegalArgumentException(OrderException.USER_NOT_SLLER_OR_BUYER);
         }
-        int max = messagesMapper.fillMax(orderId);
-        if(max == 0){
-            return null;
-        }
-        PageHelper.startPage(max, limit, SortBy.CREATE_TIME_DESC);
+
+        PageHelper.startPage(page, limit, SortBy.CREATE_TIME_DESC);
         List<Message> messages = messagesMapper.selectByOrderId(orderId);
+        PageInfo<Message> pageInfo = new PageInfo<>(messages);
 
         return MessageVO.builder()
                 .message(messages)
-                .hasMore(messages.size() >= limit)
+                .hasMore(pageInfo.getPageNum() < pageInfo.getPages())
                 .build();
     }
 
@@ -121,7 +121,7 @@ public class MessagesServiceImpl implements MessagesService {
             throw new IllegalArgumentException(OrderException.USER_NOT_SLLER_OR_BUYER);
         }
 
-        messagesMapper.updateRead(orderId);
+        messagesMapper.updateRead(orderId, currentId);
     }
 
     /**
@@ -164,11 +164,30 @@ public class MessagesServiceImpl implements MessagesService {
         String receiverId = senderId.equals(buyerId) ? sellerId : buyerId;
 
         LocalDateTime now = LocalDateTime.now();
-        //查找通知
-        LocalDateTime maxTime = notificationsMapper.getMaxTime(order.getId(),receiverId);
-        if(maxTime == null||maxTime.isBefore(now.minusMinutes(5))){
-            // 5分钟内没有评价
-            // 收到新消息（聚合：5 分钟内同一订单只发一条）
+        //去重非原子：countByClientId 和 insert 之间并发重复会抛 DuplicateKeyException，
+        // 被 onMessage 的 catch 吞掉 → 发送方拿不到 message_ack
+        // 。落库不重复（有唯一索引兜底），但客户端收不到确认。
+        // 5. 组装消息并落库 —— 真正并发时靠唯一索引兜底，捕获重复
+        Message message = Message.builder()
+                .orderId(dto.getOrderId())
+                .senderId(senderId)
+                .receiverId(receiverId)
+                .content(dto.getContent())
+                .clientId(dto.getClientId())
+                .createdAt(now)
+                .build();
+
+        try {
+            messagesMapper.insert(message);
+        } catch (DuplicateKeyException e) {
+            // 并发下同一 clientId 已被插入，直接返回已存在的那条（不重复通知）
+            log.warn("消息重复（并发去重），clientId={}", dto.getClientId());
+            return messagesMapper.selectByClientId(dto.getClientId());
+        }
+
+// 6. 只有「真正新落库」的消息才发通知（重复消息不会走到这里）
+        LocalDateTime maxTime = notificationsMapper.getMaxTime(order.getId(), receiverId);
+        if (maxTime == null || maxTime.isBefore(now.minusMinutes(5))) {
             Notification notification = Notification.builder()
                     .relatedOrderId(order.getId())
                     .userId(receiverId)
@@ -179,17 +198,6 @@ public class MessagesServiceImpl implements MessagesService {
             notificationsMapper.insert(notification);
         }
 
-        // 6. 组装消息对象并落库（id 是数据库自增主键，这里不手动指定）
-
-        Message message = Message.builder()
-                .orderId(dto.getOrderId())
-                .senderId(senderId)
-                .receiverId(receiverId)
-                .content(dto.getContent())
-                .clientId(dto.getClientId())
-                .createdAt(now)
-                .build();
-        messagesMapper.insert(message);
 
         // 7. 重新查询一次，拿到数据库自增生成的 id（Message.id 是 String，直接自增回填可能类型不匹配，所以用查询拿）
         Message saved = messagesMapper.selectByClientId(dto.getClientId());

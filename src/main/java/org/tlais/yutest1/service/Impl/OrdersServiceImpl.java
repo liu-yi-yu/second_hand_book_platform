@@ -61,6 +61,12 @@ public class OrdersServiceImpl implements OrdersService {
         Iterator<Book> it = books.iterator();
         while (it.hasNext()) {
             Book book = it.next();
+            // 禁止自买：买家不能购买自己发布的书籍。
+            // 否则订单 buyerId == sellerId，聊天时 receiver_id == sender_id（自己发给自己），
+            // 未读数会把"自己发的"算进去。此校验与 upStatus 里的 SELLER_AND_BUYER_SAME 保持一致
+            if (book.getSellerId().equals(currentId)) {
+                throw new IllegalArgumentException(OrderException.SELLER_AND_BUYER_SAME);
+            }
             if (!book.getStatus().equals(BookStatu.SELLING)) {
                 bookIds.remove(book.getId());
                 it.remove();          // 安全删除
